@@ -1,0 +1,273 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    width: 100%;
+}
+
+.navbar {
+    background-color: #192943;
+    margin: 15px auto 0;
+    width: 96%;
+    max-width: 1400px;
+    min-height: 125px;
+    border-radius: 16px;
+    padding: 25px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+}
+
+.navbar h1 {
+    font-size: 42px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+}
+
+.nav-links a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 23px;
+    font-weight: 600;
+}
+
+.nav-links a:hover,
+a:hover {
+    color: #2d83dc;
+}
+
+main {
+    width: 100%;
+    flex: 1;
+}
+
+.page-section {
+    display: none;
+    width: 100%;
+    padding: 48px 20px 55px;
+    text-align: center;
+}
+
+.page-section.active {
+    display: block;
+}
+
+.page-section h2 {
+    color: #192943;
+    font-size: 54px;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+.subtitle {
+    color: #b5b5b5;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 18px;
+}
+
+.form-box {
+    width: 100%;
+    max-width: 590px;
+    margin: 0 auto;
+    padding: 28px 22px;
+    border: 2px solid #1b1b1b;
+    border-radius: 16px;
+    text-align: left;
+}
+
+.form-box label {
+    display: block;
+    color: #ffffff;
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 18px;
+}
+
+.form-box input:not([type="checkbox"]) {
+    width: 100%;
+    height: 70px;
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #202020;
+    border-radius: 12px;
+    padding: 0 15px;
+    font-size: 25px;
+    margin-bottom: 22px;
+    outline: none;
+}
+
+.form-box input:focus {
+    border-color: #287bd0;
+}
+
+.form-box input::placeholder {
+    color: #aaaaaa;
+}
+
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 22px;
+}
+
+.form-box .remember {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 23px;
+    font-weight: 400;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.remember input {
+    width: 17px;
+    height: 17px;
+    accent-color: #287bd0;
+}
+
+.form-box a {
+    color: #2785df;
+    text-decoration: none;
+    font-size: 23px;
+    font-weight: 600;
+}
+
+.form-box button {
+    width: 100%;
+    min-height: 78px;
+    background-color: #2d7ed0;
+    color: #ffffff;
+    border: none;
+    border-radius: 15px;
+    font-size: 31px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.form-box button:hover {
+    background-color: #216bb7;
+}
+
+.switch-text {
+    text-align: center;
+    color: #ffffff;
+    font-size: 27px;
+    font-weight: 600;
+    margin-top: 20px;
+    line-height: 1.6;
+}
+
+.switch-text a {
+    color: #ffffff;
+    font-size: 29px;
+    font-weight: 800;
+}
+
+.message {
+    color: #ffffff;
+    font-size: 18px;
+    margin: 18px auto 0;
+    max-width: 590px;
+}
+
+footer {
+    background-color: #192943;
+    width: 96%;
+    max-width: 1400px;
+    margin: 0 auto 15px;
+    border-radius: 16px;
+    padding: 22px 15px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 1.5;
+}
+
+@media (max-width: 650px) {
+    .navbar {
+        min-height: auto;
+        padding: 20px;
+        gap: 15px;
+    }
+
+    .navbar h1 {
+        font-size: 30px;
+    }
+
+    .nav-links {
+        gap: 12px 18px;
+    }
+
+    .nav-links a {
+        font-size: 16px;
+    }
+
+    .page-section {
+        padding: 38px 15px;
+    }
+
+    .page-section h2 {
+        font-size: 36px;
+    }
+
+    .subtitle {
+        font-size: 19px;
+    }
+
+    .form-box {
+        padding: 22px 16px;
+    }
+
+    .form-box label {
+        font-size: 21px;
+        margin-bottom: 12px;
+    }
+
+    .form-box input:not([type="checkbox"]) {
+        height: 54px;
+        font-size: 17px;
+        margin-bottom: 18px;
+    }
+
+    .form-box .remember,
+    .form-box a {
+        font-size: 15px;
+    }
+
+    .form-box button {
+        min-height: 58px;
+        font-size: 22px;
+    }
+
+    .switch-text,
+    .switch-text a {
+        font-size: 19px;
+    }
+
+    footer {
+        font-size: 15px;
+    }
+}
