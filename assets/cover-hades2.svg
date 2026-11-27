@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" role="img" aria-label="Hades II Cover">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#071915"/>
+      <stop offset="55%" stop-color="#0f342d"/>
+      <stop offset="100%" stop-color="#0a0f18"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="50%" cy="35%" r="45%">
+      <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#10b981" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <rect width="600" height="800" fill="url(#moon)"/>
+  <path d="M350 155 A125 125 0 1 0 350 405 A95 95 0 1 1 350 155 Z" fill="#5eead4" opacity="0.75"/>
+  <rect x="40" y="545" width="520" height="215" rx="16" fill="#071110" fill-opacity="0.8" stroke="#2dd4bf" stroke-opacity="0.35"/>
+  <text x="300" y="610" text-anchor="middle" fill="#99f6e4" font-family="system-ui, sans-serif" font-size="20" font-weight="700" letter-spacing="4">DEATH TO CHRONOS</text>
+  <text x="300" y="668" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="44" font-weight="800">HADES II</text>
+  <text x="300" y="710" text-anchor="middle" fill="#2dd4bf" font-family="system-ui, sans-serif" font-size="22" font-weight="600">Supergiant Games</text>
+</svg>

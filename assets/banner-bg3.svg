@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-label="Baldur's Gate 3 Banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#140710"/>
+      <stop offset="50%" stop-color="#3b102c"/>
+      <stop offset="100%" stop-color="#100816"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="75%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#a855f7" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#bg)"/>
+  <rect width="1200" height="500" fill="url(#glow)"/>
+  <polygon points="880,95 995,180 950,315 810,315 765,180" fill="none" stroke="#fda4af" stroke-width="3.5" opacity="0.65"/>
+  <path d="M0 440 L260 360 L480 410 L750 330 L980 390 L1200 350 L1200 500 L0 500 Z" fill="#09050c" opacity="0.82"/>
+</svg>
