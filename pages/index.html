@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GameHub — Login, Verification &amp; Profile</title>
+  <title>GameHub — Login</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-page="login">
   <div class="page-shell">
-    <!-- Top Navigation Bar (Horizontal Prototype) -->
+    <!-- Top Navigation Bar -->
     <header class="navbar">
       <div class="navbar-inner">
-        <a href="#login" class="brand" id="brandLink" aria-label="GameHub Home">
+        <a href="index.html" class="brand" aria-label="GameHub Home">
           <span class="brand-icon" aria-hidden="true">🎮</span>
           <span class="brand-text">GAMEHUB</span>
         </a>
@@ -29,20 +29,20 @@
         </button>
 
         <nav class="nav-links" id="navLinks" aria-label="Primary">
-          <a href="#home" class="nav-link" data-nav="home">Home</a>
-          <a href="#explore" class="nav-link" data-nav="explore">Explore Games</a>
-          <a href="#top-rated" class="nav-link" data-nav="top-rated">Top Rated</a>
-          <a href="#compare" class="nav-link" data-nav="compare">Compare</a>
-          <a href="#about" class="nav-link" data-nav="about">About</a>
+          <a href="index.html" class="nav-link active">Home</a>
+          <a href="#explore" class="nav-link" data-nav="Explore Games">Explore Games</a>
+          <a href="#top-rated" class="nav-link" data-nav="Top Rated">Top Rated</a>
+          <a href="#compare" class="nav-link" data-nav="Compare">Compare</a>
+          <a href="#about" class="nav-link" data-nav="About">About</a>
         </nav>
 
-        <div class="nav-auth" id="navAuth">
-          <button type="button" class="nav-pill" id="navAuthBtn">Login</button>
+        <div class="nav-auth">
+          <a href="signup.html" class="nav-pill" id="navAuthLink">Sign Up</a>
         </div>
       </div>
     </header>
 
-    <!-- Demo Verification Code Banner (simulates email inbox offline) -->
+    <!-- Demo Verification Code Banner -->
     <div class="demo-toast hidden" id="demoToast" role="status" aria-live="polite">
       <div class="demo-toast-content">
         <span class="demo-badge">DEMO INBOX</span>
@@ -51,9 +51,8 @@
       <button type="button" class="demo-toast-close" id="demoToastClose" aria-label="Dismiss notification">✕</button>
     </div>
 
-    <!-- Main Content Area -->
     <main class="main-content">
-      <!-- ==================== VIEW 1: LOGIN (Page 1) ==================== -->
+      <!-- ==================== PAGE 1: LOGIN VIEW ==================== -->
       <section class="view active" id="view-login" aria-labelledby="loginHeading">
         <div class="view-header">
           <h1 class="hero-title" id="loginHeading">Welcome Back!</h1>
@@ -116,7 +115,6 @@
               LOGIN
             </button>
 
-            <!-- Social login shortcuts from Vertical Prototype -->
             <div class="social-divider">
               <span>or continue with</span>
             </div>
@@ -128,166 +126,21 @@
 
             <p class="card-footer-text">
               Don't have an account?
-              <button type="button" class="text-link bold-link" id="goToSignupBtn">Create Account</button>
+              <a href="signup.html" class="text-link bold-link">Create Account</a>
             </p>
           </form>
         </div>
 
         <p class="demo-hint">
-          Demo account: <code>Player123</code> (or <code>player123@gamehub.com</code>) / <code>GameHub@123</code>
+          Enter any valid email/username &amp; password (6+ chars) to log in &amp; verify, or use demo: <code>Player123</code> / <code>GameHub@123</code>
         </p>
       </section>
 
-      <!-- ==================== VIEW 2: SIGN UP (Page 2) ==================== -->
-      <section class="view" id="view-signup" aria-labelledby="signupHeading">
-        <div class="view-header">
-          <h1 class="hero-title" id="signupHeading">Create Your Account</h1>
-          <p class="hero-subtitle">Join the GameHub community!</p>
-        </div>
-
-        <div class="auth-card">
-          <form id="signupForm" novalidate>
-            <div class="form-alert hidden" id="signupAlert" role="alert"></div>
-
-            <div class="form-group">
-              <label for="signupFullName">Full Name</label>
-              <div class="input-wrapper">
-                <input
-                  type="text"
-                  id="signupFullName"
-                  name="fullName"
-                  placeholder="Enter full name"
-                  autocomplete="name"
-                  required
-                />
-                <span class="field-status" id="signupFullNameStatus" aria-hidden="true"></span>
-              </div>
-              <p class="field-error" id="signupFullNameError"></p>
-            </div>
-
-            <div class="form-group">
-              <label for="signupUsername">Username</label>
-              <div class="input-wrapper">
-                <input
-                  type="text"
-                  id="signupUsername"
-                  name="username"
-                  placeholder="Choose username"
-                  autocomplete="username"
-                  required
-                />
-                <span class="field-status" id="signupUsernameStatus" aria-hidden="true"></span>
-              </div>
-              <p class="field-error" id="signupUsernameError"></p>
-            </div>
-
-            <div class="form-group">
-              <label for="signupEmail">Email</label>
-              <div class="input-wrapper">
-                <input
-                  type="email"
-                  id="signupEmail"
-                  name="email"
-                  placeholder="Enter email address"
-                  autocomplete="email"
-                  required
-                />
-                <span class="field-status" id="signupEmailStatus" aria-hidden="true"></span>
-              </div>
-              <p class="field-error" id="signupEmailError"></p>
-            </div>
-
-            <div class="form-group">
-              <label for="signupConfirmEmail">Confirm Email</label>
-              <div class="input-wrapper">
-                <input
-                  type="email"
-                  id="signupConfirmEmail"
-                  name="confirmEmail"
-                  placeholder="Re-enter email address"
-                  autocomplete="email"
-                  required
-                />
-                <span class="field-status" id="signupConfirmEmailStatus" aria-hidden="true"></span>
-              </div>
-              <p class="field-error" id="signupConfirmEmailError"></p>
-            </div>
-
-            <div class="form-group">
-              <label for="signupPassword">Password</label>
-              <div class="input-wrapper has-toggle">
-                <input
-                  type="password"
-                  id="signupPassword"
-                  name="password"
-                  placeholder="Create password (min. 6 characters)"
-                  autocomplete="new-password"
-                  required
-                />
-                <button
-                  type="button"
-                  class="toggle-pw"
-                  data-target="signupPassword"
-                  aria-label="Show password"
-                >Show</button>
-                <span class="field-status" id="signupPasswordStatus" aria-hidden="true"></span>
-              </div>
-              <p class="field-error" id="signupPasswordError"></p>
-            </div>
-
-            <div class="form-group">
-              <label for="signupConfirmPassword">Confirm Password</label>
-              <div class="input-wrapper has-toggle">
-                <input
-                  type="password"
-                  id="signupConfirmPassword"
-                  name="confirmPassword"
-                  placeholder="Re-enter password"
-                  autocomplete="new-password"
-                  required
-                />
-                <button
-                  type="button"
-                  class="toggle-pw"
-                  data-target="signupConfirmPassword"
-                  aria-label="Show password"
-                >Show</button>
-                <span class="field-status" id="signupConfirmPasswordStatus" aria-hidden="true"></span>
-              </div>
-              <p class="field-error" id="signupConfirmPasswordError"></p>
-            </div>
-
-            <div class="checkbox-stack">
-              <label class="checkbox-label">
-                <input type="checkbox" id="signupNewsletter" />
-                <span>Send me weekly top-rated game digests (Newsletter)</span>
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" id="signupTerms" required />
-                <span>I agree to the GameHub Terms &amp; Community Guidelines</span>
-              </label>
-              <p class="field-error" id="signupTermsError"></p>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block" id="signupSubmitBtn" disabled>
-              CREATE ACCOUNT
-            </button>
-
-            <p class="card-footer-text">
-              Already have an account?
-              <button type="button" class="text-link bold-link" id="goToLoginFromSignupBtn">Login</button>
-            </p>
-          </form>
-        </div>
-      </section>
-
-      <!-- ==================== VIEW 3: ACCOUNT VERIFICATION ==================== -->
+      <!-- ==================== VERIFY ACCOUNT (for unverified login) ==================== -->
       <section class="view" id="view-verify" aria-labelledby="verifyHeading">
         <div class="view-header">
           <h1 class="hero-title" id="verifyHeading">Verify Your Account</h1>
-          <p class="hero-subtitle" id="verifySubtitle">
-            Enter the 6-digit activation code sent to your email
-          </p>
+          <p class="hero-subtitle">Enter the 6-digit activation code sent to your email</p>
         </div>
 
         <div class="auth-card">
@@ -333,7 +186,7 @@
         </div>
       </section>
 
-      <!-- ==================== VIEW 4: FORGOT PASSWORD & RESET ==================== -->
+      <!-- ==================== FORGOT PASSWORD & RESET ==================== -->
       <section class="view" id="view-forgot" aria-labelledby="forgotHeading">
         <div class="view-header">
           <h1 class="hero-title" id="forgotHeading">Forgot Password</h1>
@@ -343,7 +196,6 @@
         </div>
 
         <div class="auth-card">
-          <!-- Step 1: Enter email -->
           <form id="forgotEmailForm" novalidate>
             <div class="form-alert hidden" id="forgotAlert" role="alert"></div>
 
@@ -375,7 +227,6 @@
             </p>
           </form>
 
-          <!-- Step 2: Check email + enter code & new password -->
           <form id="resetPasswordForm" class="hidden" novalidate>
             <div class="confirm-banner">
               <span class="confirm-icon" aria-hidden="true">✓</span>
@@ -459,7 +310,6 @@
             </div>
           </form>
 
-          <!-- Step 3: Password reset complete -->
           <div id="resetSuccessBox" class="hidden">
             <div class="confirm-banner">
               <span class="confirm-icon" aria-hidden="true">✓</span>
@@ -474,131 +324,9 @@
           </div>
         </div>
       </section>
-
-      <!-- ==================== VIEW 5: USER PROFILE (Page 3) ==================== -->
-      <section class="view" id="view-profile" aria-labelledby="profileHeading">
-        <div class="profile-container">
-          <h1 class="section-heading" id="profileHeading">My Profile</h1>
-
-          <div class="profile-card">
-            <div class="profile-header">
-              <div class="avatar-circle" id="profileAvatar" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-              <div class="profile-identity">
-                <div class="profile-name-row">
-                  <h2 id="profileUsername">Player123</h2>
-                  <span class="verified-pill" id="profileVerifiedBadge">✓ Verified</span>
-                </div>
-                <p class="profile-tagline" id="profileTagline">Gaming enthusiast</p>
-                <p class="profile-welcome" id="profileWelcome">Welcome to your profile!</p>
-                <p class="profile-meta" id="profileMeta"></p>
-              </div>
-            </div>
-
-            <!-- Stats Grid (matching Page 3 light cards) -->
-            <div class="stats-grid">
-              <div class="stat-card">
-                <span class="stat-number" id="statReviews">12</span>
-                <span class="stat-label">Total Reviews</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-number" id="statSaved">08</span>
-                <span class="stat-label">Saved Games</span>
-              </div>
-            </div>
-
-            <button type="button" class="btn btn-primary btn-block" id="editProfileBtn">
-              EDIT PROFILE
-            </button>
-
-            <!-- Recent Reviews -->
-            <div class="recent-reviews">
-              <h3>Recent Reviews</h3>
-              <div id="recentReviewsList" class="reviews-list"></div>
-            </div>
-
-            <button type="button" class="btn btn-logout btn-block" id="logoutBtn">
-              LOGOUT
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== VIEW 6: EDIT PROFILE (Vertical Prototype Detail) ==================== -->
-      <section class="view" id="view-edit-profile" aria-labelledby="editProfileHeading">
-        <div class="profile-container">
-          <h1 class="section-heading" id="editProfileHeading">Edit Profile</h1>
-
-          <div class="profile-card">
-            <form id="editProfileForm" novalidate>
-              <div class="form-alert hidden" id="editProfileAlert" role="alert"></div>
-
-              <div class="edit-grid">
-                <div class="form-group">
-                  <label for="editFullName">Full Name</label>
-                  <input type="text" id="editFullName" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="editUsername">Username</label>
-                  <input type="text" id="editUsername" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="editAge">Age</label>
-                  <input type="number" id="editAge" min="13" max="120" placeholder="e.g. 22" />
-                </div>
-
-                <div class="form-group">
-                  <label>Gender</label>
-                  <div class="radio-group">
-                    <label class="radio-label"><input type="radio" name="editGender" value="Male" /> Male</label>
-                    <label class="radio-label"><input type="radio" name="editGender" value="Female" /> Female</label>
-                    <label class="radio-label"><input type="radio" name="editGender" value="Other" /> Other</label>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="editCity">Current City</label>
-                  <input type="text" id="editCity" placeholder="e.g. Lahore" />
-                </div>
-
-                <div class="form-group">
-                  <label for="editTagline">Gamer Title / Rank</label>
-                  <input type="text" id="editTagline" placeholder="e.g. Gaming enthusiast" />
-                </div>
-
-                <div class="form-group">
-                  <label for="editEmail">Email</label>
-                  <input type="email" id="editEmail" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="editPhone">Phone #</label>
-                  <input type="tel" id="editPhone" placeholder="e.g. 555-123-4567" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="editAbout">About Me</label>
-                <textarea id="editAbout" rows="3" placeholder="Tell the community about your favorite genres and games..."></textarea>
-              </div>
-
-              <div class="edit-actions">
-                <button type="submit" class="btn btn-primary">SAVE CHANGES</button>
-                <button type="button" class="btn btn-secondary" id="backToProfileBtn">BACK TO PROFILE</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
     </main>
 
-    <!-- Footer (Horizontal Prototype) -->
+    <!-- Footer -->
     <footer class="footer">
       <div class="footer-links">
         <a href="#about">About GameHub</a>
