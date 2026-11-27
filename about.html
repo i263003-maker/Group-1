@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestIndex — About &amp; Google Form Sync</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div id="site-header-mount"></div>
+    <div id="utility-strip-mount"></div>
+
+    <main class="container" style="padding-bottom:40px;">
+      <div class="hero-card" style="margin-top:12px;">
+        <h1 class="section-title" style="font-size:1.7rem;margin-bottom:10px;">About QuestIndex Search Service</h1>
+        <p style="color:var(--text-secondary);max-width:780px;margin-top:0;">
+          QuestIndex is a pure HTML, CSS, and JavaScript game review and search indexing portal. Hover the Search Bubble to expand it, click its green upper notification dot for live Google Form feedback updates, sign in as <strong>Mario12</strong> to earn Redeem Points on every search, and level up recursively every 5 points.
+        </p>
+
+        <section id="google-form-setup" style="margin-top:26px;padding-top:22px;border-top:1px solid var(--border-subtle);">
+          <h2 class="section-title" style="font-size:1.25rem;margin-bottom:8px;">Google Form Feedback &amp; Live Notification Dot Config</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0;">
+            Link your Google Form URL (for users to submit reviews) and an optional published Google Sheets CSV URL (<em>File &rarr; Share &rarr; Publish to web &rarr; CSV</em>) to fetch live review notifications directly into the Search Bubble dot.
+          </p>
+          <form id="qi-gform-config-form" style="max-width:620px;margin-top:14px;">
+            <div class="form-field">
+              <label for="qi-cfg-form-url">Google Form Submission URL</label>
+              <input id="qi-cfg-form-url" type="url" placeholder="https://docs.google.com/forms/..." required />
+            </div>
+            <div class="form-field">
+              <label for="qi-cfg-csv-url">Published Google Sheet CSV Feed URL (Optional)</label>
+              <input id="qi-cfg-csv-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv" />
+            </div>
+            <button type="submit" class="btn-primary">Save Google Form Config</button>
+          </form>
+        </section>
+      </div>
+    </main>
+
+    <div id="site-footer-mount"></div>
+  </div>
+
+  <script src="assets/js/games-data.js"></script>
+  <script src="assets/js/state.js"></script>
+  <script src="assets/js/chrome.js"></script>
+  <script src="assets/js/pages.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
