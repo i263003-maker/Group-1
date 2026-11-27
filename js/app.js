@@ -365,7 +365,6 @@
       state.rememberOnVerify = rememberMe.checked;
 
       if (!user) {
-        // Allow any valid email or username (3+ chars) & password (6+ chars) to log in via 6-digit verification
         const looksLikeEmail = identifierVal.includes("@");
         let valid = true;
 
