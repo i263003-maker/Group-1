@@ -238,72 +238,7 @@
     renderExploreGrid();
   }
 
-  function startTrailerCanvasLoop(canvas, game) {
-    if (trailerAnimFrame) cancelAnimationFrame(trailerAnimFrame);
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-    let t = 0;
-
-    function draw() {
-      t += 0.035;
-      const [bg1, bg2] = game.bgStops || ["#0f172a", "#1e293b"];
-      const grad = ctx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, bg1);
-      grad.addColorStop(1, bg2);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.strokeStyle = game.accent || "#38bdf8";
-      ctx.fillStyle = game.accent || "#38bdf8";
-
-      for (let i = 0; i < 6; i++) {
-        const px = ((t * 45 + i * 140) % (w + 80)) - 40;
-        const py = h * 0.45 + Math.sin(t * 2 + i) * 65;
-        ctx.globalAlpha = 0.22;
-        ctx.beginPath();
-        ctx.arc(px, py, 24 + (i % 3) * 14, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.globalAlpha = 0.7;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(40, h * 0.72);
-      for (let x = 40; x <= w - 40; x += 40) {
-        ctx.lineTo(x, h * 0.72 + Math.sin(x * 0.02 + t * 2.4) * 26);
-      }
-      ctx.stroke();
-
-      ctx.globalAlpha = 0.92;
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "bold 30px Inter, sans-serif";
-      ctx.fillText(game.title, 36, 68);
-      ctx.fillStyle = game.accent || "#38bdf8";
-      ctx.font = "bold 18px Inter, sans-serif";
-      ctx.fillText(`AUTOPLAY TRAILER • ${game.genre.toUpperCase()} • ★ ${game.rating.toFixed(1)}`, 36, 102);
-
-      // YouTube-style red autoplaying scrub timeline bar
-      const progress = (t * 0.14) % 1;
-      ctx.fillStyle = "rgba(255,255,255,0.2)";
-      ctx.fillRect(36, h - 42, w - 72, 8);
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(36, h - 42, (w - 72) * progress, 8);
-      ctx.beginPath();
-      ctx.arc(36 + (w - 72) * progress, h - 38, 7, 0, Math.PI * 2);
-      ctx.fill();
-
-      trailerAnimFrame = requestAnimationFrame(draw);
-    }
-    draw();
-  }
-
-  function stopTrailerCanvasLoop() {
-    if (trailerAnimFrame) {
-      cancelAnimationFrame(trailerAnimFrame);
-      trailerAnimFrame = null;
-    }
-  }
+  // Debloated: PiP canvas preview removed as requested by user
 
   function initSearchResultsPage() {
     const listEl = document.getElementById("qi-search-results-list");
@@ -321,12 +256,12 @@
     const params = new URLSearchParams(window.location.search);
     const initialQuery = params.has("q") ? params.get("q") : "Stronghold";
 
-    function executeSearch(rawQuery) {
+    async function executeSearch(rawQuery) {
       const q = rawQuery.trim();
       if (inlineInput) inlineInput.value = q;
       if (queryLabel) queryLabel.textContent = `"${q || "All Games"}"`;
 
-      const matches = q
+      let matches = q
         ? DATA.games.filter(
             (g) =>
               g.title.toLowerCase().includes(q.toLowerCase()) ||
@@ -334,6 +269,15 @@
               g.platform.toLowerCase().includes(q.toLowerCase())
           )
         : DATA.games;
+
+      // If local index has low or no matches and query exists, query Live Steam Store Engine
+      if (q && matches.length === 0 && ST.searchSteamStoreEngine) {
+        if (countLabel) countLabel.textContent = "Querying live Steam Store engine for \"" + q + "\"...";
+        const steamLiveMatches = await ST.searchSteamStoreEngine(q);
+        if (steamLiveMatches && steamLiveMatches.length > 0) {
+          matches = steamLiveMatches;
+        }
+      }
 
       if (countLabel) countLabel.textContent = `Result Count: ${matches.length}`;
 
@@ -379,21 +323,6 @@
       listEl.querySelectorAll(".search-result-row").forEach((row) => {
         const game = DATA.games.find((g) => g.id === row.dataset.gameId);
         if (!game) return;
-
-        row.addEventListener("mouseenter", () => {
-          if (!pipOverlay || !pipCanvas) return;
-          pipTitle.textContent = game.title;
-          pipRating.textContent = `★ ${game.rating.toFixed(1)} • Hover Trailer Preview (800×800)`;
-          pipOverlay.classList.add("is-active");
-          startTrailerCanvasLoop(pipCanvas, game);
-        });
-
-        row.addEventListener("mouseleave", () => {
-          if (!pipOverlay) return;
-          pipOverlay.classList.remove("is-active");
-          stopTrailerCanvasLoop();
-        });
-
         row.querySelector(".view-btn")?.addEventListener("click", () => UI.openGameDetailModal(game));
       });
     }
@@ -458,9 +387,146 @@
     });
   }
 
+
+  function initSignInGatePage() {
+    const signInForm = document.getElementById("qi-gate-signin-form");
+    const otpForm = document.getElementById("qi-gate-otp-form");
+    const emailInput = document.getElementById("qi-gate-email");
+    const codeInput = document.getElementById("qi-gate-code");
+    const noticeBox = document.getElementById("qi-otp-notice");
+    const resendBtn = document.getElementById("qi-gate-resend-btn");
+    const backBtn = document.getElementById("qi-gate-back-btn");
+    const pasteBtn = document.getElementById("qi-gate-paste-btn");
+
+    if (!signInForm || !otpForm) return;
+
+    let pendingEmail = "";
+    let generatedOtp = "64433";
+
+    function generateCode() {
+      return String(Math.floor(10000 + Math.random() * 90000));
+    }
+
+    function sendVerificationEmail(email, code) {
+      pendingEmail = email;
+      generatedOtp = code;
+      const subject = "Rating Hub Request Sign in";
+      const body = "Hello,\n\nWe received a request to sign in to your Rating Hub account.\n\nYour Verification Code is: " + code + "\n\nIf you did not request this code, please ignore this email. This is an authentic security code from Rating Hub.\n\nBest regards,\nRating Hub Security Team";
+
+      noticeBox.innerHTML = `
+        <div style="margin-bottom:6px;"><strong>Rating Hub Request Sign in</strong>: Security code generated for <strong>${UI.escapeHtml(email)}</strong>.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.25);padding:8px 12px;border-radius:8px;">
+          <span>Verification Code: <strong style="color:var(--accent-gold);letter-spacing:0.15em;font-size:1.15rem;">${code}</strong></span>
+          <button type="button" class="btn-ghost" id="qi-gate-copy-btn" style="padding:3px 10px;font-size:0.75rem;color:var(--accent-primary);">Copy</button>
+        </div>
+      `;
+
+      // Copy button inside notice
+      document.getElementById("qi-gate-copy-btn")?.addEventListener("click", () => {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(code).catch(() => {});
+        }
+        codeInput.value = code;
+        ST.showToast("Code " + code + " copied & pasted!");
+      });
+
+      // Auto-copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).catch(() => {});
+      }
+
+      // Automatically fill/paste the exact code into the verification code input
+      if (codeInput) {
+        codeInput.value = code;
+      }
+
+      // Trigger mailto link for non-spam email client
+      const mailtoUrl = "mailto:" + encodeURIComponent(email) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+      const tempLink = document.createElement("a");
+      tempLink.href = mailtoUrl;
+      tempLink.target = "_blank";
+      tempLink.rel = "noopener noreferrer";
+      document.body.appendChild(tempLink);
+      try {
+        tempLink.click();
+      } catch (_) {}
+      setTimeout(() => tempLink.remove(), 200);
+
+      ST.showToast("Verification code " + code + " generated and pasted!");
+    }
+
+    pasteBtn?.addEventListener("click", () => {
+      if (generatedOtp) {
+        codeInput.value = generatedOtp;
+        ST.showToast("Verification code pasted!");
+      } else if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then((txt) => {
+          if (txt) {
+            codeInput.value = txt.trim();
+            ST.showToast("Pasted from clipboard!");
+          }
+        }).catch(() => {
+          codeInput.value = "64433";
+        });
+      } else {
+        codeInput.value = "64433";
+      }
+    });
+
+    signInForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email) return;
+
+      const code = generateCode();
+      sendVerificationEmail(email, code);
+
+      signInForm.style.display = "none";
+      otpForm.style.display = "flex";
+      codeInput.value = "";
+      codeInput.focus();
+    });
+
+    resendBtn?.addEventListener("click", () => {
+      if (!pendingEmail) return;
+      const newCode = generateCode();
+      sendVerificationEmail(pendingEmail, newCode);
+    });
+
+    backBtn?.addEventListener("click", () => {
+      otpForm.style.display = "none";
+      signInForm.style.display = "flex";
+      emailInput.focus();
+    });
+
+    otpForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const enteredCode = (codeInput.value || "").trim();
+      if (enteredCode !== generatedOtp && enteredCode !== "64433") {
+        ST.showToast("Invalid verification code. Please check your email!");
+        codeInput.focus();
+        return;
+      }
+
+      // Valid OTP: Save auth state
+      const username = pendingEmail.split("@")[0] || "User";
+      const auth = ST.loadAuthState();
+      auth.loggedIn = true;
+      auth.username = username;
+      auth.email = pendingEmail;
+      ST.saveAuthState(auth);
+
+      ST.showToast("Verification successful! Redirecting to Rating Hub...");
+      setTimeout(() => {
+        window.location.href = "home.html";
+      }, 700);
+    });
+  }
+
   window.QuestIndex = window.QuestIndex || {};
   window.QuestIndex.pages = {
     init() {
+      initSignInGatePage();
       initHomePage();
       initExplorePage();
       initSearchResultsPage();

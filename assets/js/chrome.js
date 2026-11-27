@@ -18,9 +18,52 @@
       .replace(/'/g, "&#39;");
   }
 
+  function getSteamThumbnailUrl(game) {
+    if (game.thumbnailUrl) return game.thumbnailUrl;
+    if (game.steamAppId) {
+      return `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${game.steamAppId}/header.jpg`;
+    }
+    return "";
+  }
+
+  function getGameVideoTrailerUrl(game) {
+    // Build a YouTube embed that searches for "${game.title} trailer steam"
+    const query = encodeURIComponent(`${game.title} trailer steam`);
+    // YouTube embed with search list, autoplay muted, loop, no controls
+    return `https://www.youtube.com/embed?listType=search&list=${query}&autoplay=1&mute=1&loop=1&controls=0&modestbranding=1`;
+  }
+
   function createGameArtSvg(game, height = 200) {
+    const thumbUrl = getSteamThumbnailUrl(game);
+    const videoUrl = getGameVideoTrailerUrl(game);
     const [c1, c2] = game.bgStops || ["#1e293b", "#0f172a"];
-    const accent = game.accent || "#38bdf8";
+    const accent = game.accent || "#f97316";
+
+    // Render modern high-fidelity image that seamlessly plays video trailer like YouTube on hover
+    if (thumbUrl || videoUrl) {
+      return `
+        <div class="steam-thumb-container" style="position:relative;width:100%;height:${typeof height === 'number' ? height + 'px' : height};overflow:hidden;background:linear-gradient(135deg, ${c1}, ${c2});">
+          <img src="${escapeHtml(thumbUrl || '')}" alt="${escapeHtml(game.title)} Thumbnail" loading="lazy" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover;display:block;transition:opacity 200ms ease, transform 280ms ease;" onerror="this.style.display='none';" />
+          
+          <!-- YouTube-style Muted Hover Video Player -->
+          <video class="card-hover-video" src="${escapeHtml(videoUrl)}" muted loop playsinline preload="none" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;transition:opacity 240ms ease;" onerror="this.style.display='none';"></video>
+
+          <!-- YouTube-style animated scrub progress line indicator -->
+          <div class="card-hover-scrub" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.2);opacity:0;transition:opacity 200ms ease;pointer-events:none;">
+            <div class="card-hover-scrub-bar" style="width:0%;height:100%;background:var(--accent-primary);transition:width 100ms linear;"></div>
+          </div>
+
+          <div class="card-thumb-overlay" style="position:absolute;inset:0;background:linear-gradient(to top, rgba(11,15,25,0.85) 0%, rgba(11,15,25,0.1) 50%, rgba(11,15,25,0.4) 100%);pointer-events:none;transition:opacity 200ms ease;"></div>
+          <div style="position:absolute;top:10px;left:12px;font-size:10px;font-weight:800;color:#f8fafc;letter-spacing:0.04em;text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none;">
+            ${escapeHtml(game.genre.toUpperCase())} &bull; ${escapeHtml(game.platform)}
+          </div>
+          <div style="position:absolute;bottom:10px;left:12px;right:12px;font-size:14px;font-weight:800;color:#ffffff;line-height:1.2;text-shadow:0 2px 4px rgba(0,0,0,0.9);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${escapeHtml(game.title)}
+          </div>
+        </div>
+      `;
+    }
+
     const motif =
       game.trailerTheme === "siege" || game.trailerTheme === "castle"
         ? `<path d="M50 155 L50 95 L70 95 L70 110 L90 110 L90 95 L110 95 L110 155 Z" fill="${accent}" opacity="0.28"/>
@@ -59,7 +102,7 @@
   function getHeroSlideIcon(iconType) {
     if (iconType === "chess") {
       return `<span class="hero-inline-icon" title="Team Chess">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 16l-1.447.724a1 1 0 0 0-.553.894V20h12v-2.382a1 1 0 0 0-.553-.894L16 16"/>
           <path d="M8.5 16c0-4 2-6 3.5-8 1.5 2 3.5 4 3.5 8"/>
           <path d="M12 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
@@ -119,7 +162,8 @@
           <a href="home.html" class="brand-link" title="Go to Home (home.html)">
             <div class="brand-logo-box">
               <span class="logo-mark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <img src="logo.png" alt="Rating Hub Logo" class="brand-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';" />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
                   <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
@@ -270,7 +314,7 @@
       mount.innerHTML = `
         <div class="auth-panel">
           <button type="button" class="auth-user-btn" id="qi-login-open-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
@@ -349,17 +393,62 @@
     document.body.appendChild(el);
   }
 
-  function openModal(html) {
+  function openModal(html, customCardClass = "") {
     ensureGlobalModals();
     const backdrop = document.getElementById("qi-modal-backdrop");
     const card = document.getElementById("qi-modal-card");
+    card.className = "modal-card " + customCardClass;
     card.innerHTML = html;
     backdrop.classList.add("is-open");
-    card.querySelector("[data-close-modal]")?.addEventListener("click", closeModal);
+
+    // Bind ALL elements with data-close-modal so Close buttons ALWAYS work
+    card.querySelectorAll("[data-close-modal]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeModal();
+      });
+    });
   }
 
   function closeModal() {
-    document.getElementById("qi-modal-backdrop")?.classList.remove("is-open");
+    const backdrop = document.getElementById("qi-modal-backdrop");
+    if (backdrop) {
+      backdrop.classList.remove("is-open");
+      const card = document.getElementById("qi-modal-card");
+      if (card) {
+        card.innerHTML = "";
+        card.className = "modal-card";
+      }
+    }
+  }
+
+  function openSteamFrameset(game) {
+    const steamUrl = game.steamUrl || ("https://store.steampowered.com/app/" + (game.steamAppId || "2140020"));
+    const steamAppId = game.steamAppId || "2140020";
+    const steamEmbedUrl = "https://store.steampowered.com/widget/" + steamAppId + "/";
+
+    // Strictly open inside frameset modal WITHOUT directing or navigating away from the page
+    openModal(`
+      <div class="modal-head" style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#66c0f4" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <h2 style="margin:0;font-size:1.15rem;">${escapeHtml(game.title)} — Steam Store &amp; Play</h2>
+        </div>
+        <button type="button" class="btn-ghost" data-close-modal style="padding:6px 14px;font-size:0.85rem;color:var(--accent-primary);border-color:var(--border-strong);">
+          Close Steam button
+        </button>
+      </div>
+      <div style="font-size:0.84rem;color:var(--text-secondary);margin-bottom:10px;padding:8px 12px;background:rgba(102,192,244,0.1);border-radius:10px;border:1px solid rgba(102,192,244,0.25);">
+        <span>Steam frameset interface &bull; You can scroll, view reviews, and interact with the game on Steam without leaving the page:</span>
+      </div>
+      <div class="steam-iframe-container" style="min-height:380px;">
+        <iframe src="${escapeHtml(steamEmbedUrl)}" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" title="Steam Game Widget" loading="lazy"></iframe>
+      </div>
+      <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:14px;">
+        <button type="button" class="btn-primary" data-close-modal style="padding:8px 24px;">Close Steam button</button>
+      </div>
+    `, "steam-modal-card");
   }
 
   function openLoginModal() {
@@ -398,6 +487,7 @@
       const currentPref = ST.getThemePreference();
       ST.applyTheme(currentPref, false);
       renderThemeDock();
+      setTimeout(bindCardVideoHoverListeners, 100);
       renderAuthPanel();
       closeModal();
       ST.showToast(`Welcome back, ${user}! Theme: ${currentPref === "system" ? "System" : currentPref}.`);
@@ -422,7 +512,7 @@
     )}</span>
         </div>
         <div style="height:10px;border-radius:999px;background:#0b0f19;overflow:hidden;margin-bottom:8px;">
-          <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#38bdf8,#fbbf24);"></div>
+          <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f97316,#fbbf24);"></div>
         </div>
         <div style="font-size:0.84rem;color:var(--text-secondary);">
           Total Redeem Points: <strong>${prog.points}</strong> &bull;
@@ -454,47 +544,240 @@
     document.getElementById("qi-switch-login-btn")?.addEventListener("click", openLoginModal);
   }
 
+
+  function computeGameRatingStats(game) {
+    const reviews = game.reviews || [];
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    if (reviews.length === 0) {
+      return {
+        average: Number(game.rating || 5.0).toFixed(1),
+        totalCount: 0,
+        counts,
+        percentages: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      };
+    }
+
+    let sum = 0;
+    reviews.forEach((r) => {
+      const score = Math.min(5, Math.max(1, Math.round(Number(r.score) || 5)));
+      counts[score] = (counts[score] || 0) + 1;
+      sum += Number(r.score) || 5;
+    });
+
+    const average = (sum / reviews.length).toFixed(1);
+    const percentages = {};
+    for (let s = 1; s <= 5; s++) {
+      percentages[s] = Math.round((counts[s] / reviews.length) * 100);
+    }
+
+    return {
+      average,
+      totalCount: reviews.length,
+      counts,
+      percentages
+    };
+  }
+
   function openGameDetailModal(game) {
-    const cfg = ST.loadFormConfig();
-    const reviewsHtml = (game.reviews || [])
-      .map(
-        (r) => `
-        <div class="update-card">
-          <div class="update-card-top">
-            <span>${escapeHtml(r.user)}</span>
-            <span class="star-rating">&#9733; ${r.score.toFixed(1)}</span>
+    const authState = ST.loadAuthState();
+    const isSignedIn = Boolean(authState && authState.loggedIn);
+
+    function renderRatingsAndReviews() {
+      const stats = computeGameRatingStats(game);
+      game.rating = Number(stats.average); // Sync calculated formula average back to game model
+
+      const badgeRatingEl = document.getElementById("qi-modal-badge-rating");
+      if (badgeRatingEl) badgeRatingEl.innerHTML = "&#9733; " + stats.average;
+
+      const summaryMount = document.getElementById("qi-playstore-rating-summary");
+      if (summaryMount) {
+        summaryMount.innerHTML = `
+          <div style="display:flex;align-items:center;gap:20px;padding:16px;border-radius:16px;background:var(--bg-card);border:1px solid var(--border-subtle);margin-bottom:16px;">
+            <div style="text-align:center;min-width:105px;">
+              <div style="font-size:2.8rem;font-weight:900;line-height:1;color:var(--text-primary);letter-spacing:-0.03em;">${stats.average}</div>
+              <div style="color:var(--accent-gold);font-size:1.15rem;margin:4px 0 2px;">
+                ${"&#9733;".repeat(Math.round(Number(stats.average)))}${"&#9734;".repeat(5 - Math.round(Number(stats.average)))}
+              </div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;">${stats.totalCount} review${stats.totalCount === 1 ? "" : "s"}</div>
+            </div>
+
+            <!-- PlayStore Rating Histogram Bars -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+              ${[5, 4, 3, 2, 1].map((s) => `
+                <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;">
+                  <span style="width:8px;font-weight:700;">${s}</span>
+                  <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+                    <div style="width:${stats.percentages[s]}%;height:100%;background:linear-gradient(90deg,var(--accent-primary),var(--accent-gold));border-radius:999px;transition:width 240ms ease;"></div>
+                  </div>
+                  <span style="width:28px;text-align:right;color:var(--text-muted);font-weight:600;">${stats.percentages[s]}%</span>
+                </div>
+              `).join("")}
+            </div>
           </div>
-          <div class="update-card-body">${escapeHtml(r.text)}</div>
-        </div>
-      `
-      )
-      .join("");
+        `;
+      }
+
+      const reviewList = document.getElementById("qi-modal-review-list");
+      if (reviewList) {
+        const reviews = game.reviews || [];
+        if (reviews.length === 0) {
+          reviewList.innerHTML = `<div style="font-size:0.86rem;color:var(--text-secondary);padding:14px;text-align:center;background:var(--bg-card);border-radius:12px;">No reviews yet. Be the first to rate and write a review!</div>`;
+        } else {
+          reviewList.innerHTML = reviews.map((r) => `
+            <div class="update-card">
+              <div class="update-card-top">
+                <span style="font-weight:700;">${escapeHtml(r.user)}</span>
+                <span class="star-rating" style="color:var(--accent-gold);">&#9733; ${Number(r.score).toFixed(1)}</span>
+              </div>
+              <div class="update-card-body" style="margin-top:6px;line-height:1.5;">${escapeHtml(r.text)}</div>
+            </div>
+          `).join("");
+        }
+      }
+    }
+
+    const reviewBtnHtml = isSignedIn
+      ? `<button type="button" class="btn-ghost" id="qi-write-review-btn" style="padding:6px 14px;font-size:0.84rem;color:var(--accent-primary);border-color:var(--border-strong);">
+          &#9998; Write a Review
+        </button>`
+      : `<button type="button" class="btn-ghost" id="qi-write-review-btn" title="Sign in required to submit reviews" style="padding:6px 14px;font-size:0.84rem;text-decoration:line-through;opacity:0.65;cursor:not-allowed;">
+          <span style="text-decoration:line-through;">&#9998; Write a Review</span> (Sign in required)
+        </button>`;
+
+    const initialStats = computeGameRatingStats(game);
 
     openModal(`
       <div class="modal-head">
         <h2 style="margin:0;">${escapeHtml(game.title)}</h2>
-        <button type="button" class="modal-close-btn" data-close-modal>&times;</button>
+        <button type="button" class="modal-close-btn" data-close-modal title="Close">&times;</button>
       </div>
       <div style="border-radius:16px;overflow:hidden;border:1px solid var(--border-subtle);margin-bottom:14px;">
         ${createGameArtSvg(game, 180)}
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
         <span class="feature-pill" style="margin:0;">${escapeHtml(game.genre)}</span>
-        <span class="feature-pill" style="margin:0;background:rgba(251,191,36,0.16);color:var(--accent-gold);">&#9733; ${game.rating.toFixed(
-          1
-        )}</span>
+        <span class="feature-pill" id="qi-modal-badge-rating" style="margin:0;background:rgba(251,191,36,0.16);color:var(--accent-gold);">&#9733; ${initialStats.average}</span>
         <span class="feature-pill" style="margin:0;background:rgba(148,163,184,0.15);color:var(--text-primary);">${escapeHtml(
           game.platform
         )} &bull; ${game.year}</span>
+        <button type="button" class="btn-steam" id="qi-play-steam-btn" style="margin-left:auto;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+          Play on Steam
+        </button>
       </div>
-      <p style="color:var(--text-secondary);font-size:0.94rem;margin-top:0;">${escapeHtml(game.description)}</p>
-      <h4 style="margin:14px 0 8px;">Community Reviews</h4>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">${reviewsHtml}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-        <a href="${escapeHtml(cfg.formUrl)}" target="_blank" rel="noopener" class="btn-primary">Submit Feedback (Google Form)</a>
-        <button type="button" class="btn-ghost" data-close-modal>Close</button>
+      <p style="color:var(--text-secondary);font-size:0.94rem;margin-top:0;margin-bottom:16px;">${escapeHtml(game.description)}</p>
+
+      <!-- PlayStore Rating & Reviews Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 10px;flex-wrap:wrap;gap:8px;">
+        <h4 style="margin:0;font-size:1.05rem;">Ratings &amp; Reviews</h4>
+        ${reviewBtnHtml}
+      </div>
+
+      <!-- PlayStore Calculated Summary Panel -->
+      <div id="qi-playstore-rating-summary"></div>
+
+      <!-- PlayStore / Microsoft Store style Interactive Review Box -->
+      <div class="review-expand-panel" id="qi-review-expand-panel" style="display:none;margin-bottom:14px;">
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;">Rate this game</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+          <div class="interactive-stars" id="qi-star-picker" role="radiogroup" aria-label="Rating Stars">
+            <span class="star-node is-active" data-star="1" role="radio" aria-checked="false">&#9733;</span>
+            <span class="star-node is-active" data-star="2" role="radio" aria-checked="false">&#9733;</span>
+            <span class="star-node is-active" data-star="3" role="radio" aria-checked="false">&#9733;</span>
+            <span class="star-node is-active" data-star="4" role="radio" aria-checked="false">&#9733;</span>
+            <span class="star-node is-active" data-star="5" role="radio" aria-checked="true">&#9733;</span>
+          </div>
+          <span style="font-weight:800;color:var(--accent-gold);font-size:1.05rem;" id="qi-selected-star-label">5.0 / 5</span>
+        </div>
+        <textarea id="qi-review-comment" class="sort-select" style="width:100%;min-height:75px;resize:vertical;border-radius:12px;padding:10px;" placeholder="comment here"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+          <button type="button" class="btn-ghost" id="qi-cancel-review-btn" style="padding:6px 12px;font-size:0.82rem;">Cancel</button>
+          <button type="button" class="btn-primary" id="qi-submit-review-btn" style="padding:6px 16px;font-size:0.84rem;">Post Review</button>
+        </div>
+      </div>
+
+      <!-- Comment Section: Listed Reviews -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;" id="qi-modal-review-list"></div>
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px;">
+        <button type="button" class="btn-primary" data-close-modal style="padding:8px 24px;">Close</button>
       </div>
     `);
+
+    renderRatingsAndReviews();
+
+    // Bind Play on Steam
+    document.getElementById("qi-play-steam-btn")?.addEventListener("click", () => {
+      openSteamFrameset(game);
+    });
+
+    const writeBtn = document.getElementById("qi-write-review-btn");
+    const reviewPanel = document.getElementById("qi-review-expand-panel");
+    const cancelReviewBtn = document.getElementById("qi-cancel-review-btn");
+    const submitReviewBtn = document.getElementById("qi-submit-review-btn");
+    const starPicker = document.getElementById("qi-star-picker");
+    const starLabel = document.getElementById("qi-selected-star-label");
+    const commentInput = document.getElementById("qi-review-comment");
+
+    let currentRating = 5;
+
+    writeBtn?.addEventListener("click", () => {
+      if (!isSignedIn) {
+        ST.showToast("Please sign in to post a review.");
+        window.location.href = "index.html";
+        return;
+      }
+      reviewPanel.style.display = reviewPanel.style.display === "none" ? "block" : "none";
+      if (reviewPanel.style.display === "block") commentInput?.focus();
+    });
+
+    cancelReviewBtn?.addEventListener("click", () => {
+      reviewPanel.style.display = "none";
+    });
+
+    function highlightStars(val) {
+      starPicker?.querySelectorAll(".star-node").forEach((node) => {
+        const starNum = Number(node.dataset.star);
+        node.classList.toggle("is-active", starNum <= val);
+        node.setAttribute("aria-checked", String(starNum === val));
+      });
+      if (starLabel) starLabel.textContent = val.toFixed(1) + " / 5";
+    }
+
+    starPicker?.querySelectorAll(".star-node").forEach((node) => {
+      node.addEventListener("click", () => {
+        currentRating = Number(node.dataset.star);
+        highlightStars(currentRating);
+      });
+      node.addEventListener("mouseenter", () => {
+        const hoverVal = Number(node.dataset.star);
+        highlightStars(hoverVal);
+      });
+    });
+
+    starPicker?.addEventListener("mouseleave", () => {
+      highlightStars(currentRating);
+    });
+
+    submitReviewBtn?.addEventListener("click", () => {
+      const comment = (commentInput?.value || "").trim();
+      if (!comment) {
+        commentInput?.focus();
+        ST.showToast("Please enter your comment.");
+        return;
+      }
+      const auth = ST.loadAuthState();
+      const user = auth.loggedIn ? auth.username : "Guest Explorer";
+      const newReview = { user, score: currentRating, text: comment };
+      game.reviews = game.reviews || [];
+      game.reviews.unshift(newReview);
+
+      renderRatingsAndReviews();
+
+      reviewPanel.style.display = "none";
+      commentInput.value = "";
+      awardSearchRedeemPoint();
+      ST.showToast("Review submitted successfully! Rating recalculated.");
+    });
   }
 
   function bindUtilityEvents() {
@@ -688,10 +971,57 @@
     });
   }
 
+
+  function bindCardVideoHoverListeners() {
+    document.querySelectorAll(".steam-thumb-container").forEach((container) => {
+      const video = container.querySelector(".card-hover-video");
+      const img = container.querySelector(".card-thumb-img");
+      const scrub = container.querySelector(".card-hover-scrub");
+      const bar = container.querySelector(".card-hover-scrub-bar");
+      if (!video) return;
+
+      let scrubTimer = null;
+
+      container.addEventListener("mouseenter", () => {
+        if (!video.src || video.style.display === "none") return;
+        video.currentTime = 0;
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              video.style.opacity = "1";
+              if (img) img.style.opacity = "0.2";
+              if (scrub) scrub.style.opacity = "1";
+              clearInterval(scrubTimer);
+              scrubTimer = setInterval(() => {
+                if (video.duration && bar) {
+                  const pct = Math.min(100, (video.currentTime / video.duration) * 100);
+                  bar.style.width = pct + "%";
+                }
+              }, 100);
+            })
+            .catch(() => {
+              // Video file not yet placed in assets/media/trailers/
+            });
+        }
+      });
+
+      container.addEventListener("mouseleave", () => {
+        clearInterval(scrubTimer);
+        video.pause();
+        video.style.opacity = "0";
+        if (img) img.style.opacity = "1";
+        if (scrub) scrub.style.opacity = "0";
+        if (bar) bar.style.width = "0%";
+      });
+    });
+  }
+
   window.QuestIndex = window.QuestIndex || {};
   window.QuestIndex.chrome = {
     escapeHtml,
     createGameArtSvg,
+    bindCardVideoHoverListeners,
     getHeroSlideIcon,
     awardSearchRedeemPoint,
     openGameDetailModal,

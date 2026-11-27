@@ -1,41 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QuestIndex — About &amp; Google Form Sync</title>
+  <title>About – Rating Hub</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
+
 <body>
   <div class="app-shell">
     <div id="site-header-mount"></div>
     <div id="utility-strip-mount"></div>
 
     <main class="container" style="padding-bottom:40px;">
-      <div class="hero-card" style="margin-top:12px;">
-        <h1 class="section-title" style="font-size:1.7rem;margin-bottom:10px;">About QuestIndex Search Service</h1>
-        <p style="color:var(--text-secondary);max-width:780px;margin-top:0;">
-          QuestIndex is a pure HTML, CSS, and JavaScript game review and search indexing portal. Hover the Search Bubble to expand it, click its green upper notification dot for live Google Form feedback updates, sign in as <strong>Mario12</strong> to earn Redeem Points on every search, and level up recursively every 5 points.
-        </p>
+      <!-- About Me Section -->
+      <section id="about-section" class="about-card" style="margin-top:20px;display:flex;align-items:center;">
+        <script>
+          fetch('about.json')
+            .then(r => r.json())
+            .then(data => {
+              const sec = document.getElementById('about-section');
+              sec.innerHTML = `
+                <img src="${data.Picture}" alt="${data.Name}" style="width:120px;height:120px;border-radius:50%;margin-right:20px;" />
+                <div>
+                  <h2 style="margin:0;">${data.Name}</h2>
+                  <p style="margin:2px 0;">${data.Role}</p>
+                  <p style="margin:2px 0;">Email: <a href="mailto:${data['Contact Gmail']}">${data['Contact Gmail']}</a></p>
+                  <p style="margin:2px 0;">Phone: <a href="tel:${data['Contact Phone'].replace(/\s+/g, '')}">${data['Contact Phone']}</a></p>
+                </div>`;
+            })
+            .catch(err => console.error('Failed to load about.json', err));
+        </script>
+      </section>
 
-        <section id="google-form-setup" style="margin-top:26px;padding-top:22px;border-top:1px solid var(--border-subtle);">
-          <h2 class="section-title" style="font-size:1.25rem;margin-bottom:8px;">Google Form Feedback &amp; Live Notification Dot Config</h2>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0;">
-            Link your Google Form URL (for users to submit reviews) and an optional published Google Sheets CSV URL (<em>File &rarr; Share &rarr; Publish to web &rarr; CSV</em>) to fetch live review notifications directly into the Search Bubble dot.
-          </p>
-          <form id="qi-gform-config-form" style="max-width:620px;margin-top:14px;">
-            <div class="form-field">
-              <label for="qi-cfg-form-url">Google Form Submission URL</label>
-              <input id="qi-cfg-form-url" type="url" placeholder="https://docs.google.com/forms/..." required />
-            </div>
-            <div class="form-field">
-              <label for="qi-cfg-csv-url">Published Google Sheet CSV Feed URL (Optional)</label>
-              <input id="qi-cfg-csv-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv" />
-            </div>
-            <button type="submit" class="btn-primary">Save Google Form Config</button>
-          </form>
-        </section>
-      </div>
+      <!-- Website Configuration -->
+      <section id="site-config" style="margin-top:30px;">
+        <h2 class="section-title">Website Configuration</h2>
+        <p>This site is a static HTML/CSS/JavaScript application. Key components:</p>
+        <ul>
+          <li>HTML5 markup with responsive containers.</li>
+          <li>Styling in <code>assets/css/styles.css</code> (orange theme, panels, layout).</li>
+          <li>Vanilla JavaScript modules in <code>assets/js</code> (state.js, pages.js, chrome.js, app.js) for routing,
+            search, Steam integration, and UI interactions.</li>
+          <li>Game data in <code>assets/js/games-data.js</code> and site metadata in <code>about.json</code>.</li>
+          <li>All assets (images, thumbnails, icons) live under <code>assets/</code>.</li>
+        </ul>
+        <p>The build process is trivial: open <code>index.html</code> in a browser. For local development you can serve
+          the folder with any static server, e.g., <code>python -m http.server</code>.</p>
+        <h3 class="section-title">Team</h3>
+        <ul>
+
+        </ul>
+      </section>
     </main>
 
     <div id="site-footer-mount"></div>
@@ -47,4 +64,5 @@
   <script src="assets/js/pages.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
+
 </html>
