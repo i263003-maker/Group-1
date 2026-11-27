@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RatingHub // Game Reviews</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand-group">
+        <a class="brand" href="index.html" aria-label="RatingHub Game Reviews">
+          <img src="assets/ratinghub-logo.png" alt="RatingHub" class="brand-logo" />
+        </a>
+        <a class="btn btn-secondary btn-sm brand-home-btn" href="home.html">Home</a>
+      </div>
+
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="openSubmitGameBtn">
+          + Submit Game for Review
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="openGitHubSyncBtn" title="Configure GitHub permanent storage">
+          <span class="status-dot" id="githubSyncDot"></span>
+          <span id="githubSyncStatusText">GitHub Sync</span>
+        </button>
+        <span class="wishlist-pill" title="Wishlist saved locally (account sync coming soon)">
+          ♥ <span id="navWishlistCount">0</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container hub-main">
+    <section class="hub-hero">
+      <div>
+        <p class="eyebrow">EDITORIAL &amp; COMMUNITY GAME HUB</p>
+        <h1>Discover, Rate, and Review Every Game</h1>
+        <p class="hub-subtitle">
+          Click any game below to open its full info dossier, edit details, wishlist it for later, or leave a permanent review.
+        </p>
+      </div>
+      <div class="hub-controls">
+        <input
+          type="search"
+          id="hubSearchInput"
+          class="input"
+          placeholder="Search games, studios, genres..."
+          aria-label="Search games"
+        />
+        <select id="hubPlatformFilter" class="input" aria-label="Filter by platform">
+          <option value="ALL">All Platforms</option>
+        </select>
+        <select id="hubGenreFilter" class="input" aria-label="Filter by genre">
+          <option value="ALL">All Genres</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="games-grid" id="gamesGrid" aria-live="polite"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>IGNITE Game Review Hub &middot; Static HTML/CSS/JS + GitHub Storage Ready</p>
+      <p class="muted">Wishlist saves locally until user accounts are connected.</p>
+    </div>
+  </footer>
+
+  <!-- Submit Game for Review Modal -->
+  <div class="modal-backdrop" id="submitGameModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="submitGameModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">FUTURE QUEUE &amp; COMMUNITY PITCH</p>
+          <h2 id="submitGameModalTitle">Submit a Game for Review</h2>
+        </div>
+        <button type="button" class="icon-btn" data-close-modal="submitGameModal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="submitGameForm" class="modal-body form-stack">
+        <p class="helper-text">
+          Submit a title to the review queue. Submissions are saved to <code>data/games.json</code> (and synced to GitHub if configured) or can be opened directly as a GitHub Issue.
+        </p>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Game Title *</span>
+            <input type="text" id="subTitle" class="input" required placeholder="e.g., Hollow Knight: Silksong" />
+          </label>
+          <label class="field">
+            <span>Developer / Studio *</span>
+            <input type="text" id="subDeveloper" class="input" required placeholder="e.g., Team Cherry" />
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Platforms</span>
+            <input type="text" id="subPlatforms" class="input" placeholder="PC, Switch 2, PS5" />
+          </label>
+          <label class="field">
+            <span>Release Date / Window</span>
+            <input type="text" id="subReleaseWindow" class="input" placeholder="e.g., 2026 / Released" />
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Official Store / Press Kit URL</span>
+            <input type="url" id="subOfficialUrl" class="input" placeholder="https://..." />
+          </label>
+          <label class="field">
+            <span>Your Name / Handle</span>
+            <input type="text" id="subSubmittedBy" class="input" placeholder="Optional" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Why should we review this game?</span>
+          <textarea id="subNotes" class="input" rows="3" placeholder="Brief pitch, genre, or key highlights..."></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="submitViaIssueBtn">Open as GitHub Issue</button>
+          <button type="submit" class="btn btn-primary">Queue Submission</button>
+        </div>
+
+        <div class="submissions-preview">
+          <h3>Queued Submissions (<span id="submissionsCount">0</span>)</h3>
+          <div id="pendingSubmissionsList" class="submissions-list"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GitHub Sync Settings Modal -->
+  <div class="modal-backdrop" id="githubSyncModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="githubSyncModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">PERMANENT GITHUB PERSISTENCE</p>
+          <h2 id="githubSyncModalTitle">GitHub Repository Sync</h2>
+        </div>
+        <button type="button" class="icon-btn" data-close-modal="githubSyncModal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="githubSyncForm" class="modal-body form-stack">
+        <p class="helper-text">
+          Connect your GitHub repository to commit game edits, reviews, and submissions directly into <code>data/games.json</code>. Your token stays strictly in this browser&rsquo;s <code>localStorage</code> and is never stored in code.
+        </p>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>GitHub Owner / Org</span>
+            <input type="text" id="ghOwner" class="input" placeholder="your-username" />
+          </label>
+          <label class="field">
+            <span>Repository Name</span>
+            <input type="text" id="ghRepo" class="input" placeholder="my-game-review-site" />
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Branch</span>
+            <input type="text" id="ghBranch" class="input" value="main" placeholder="main" />
+          </label>
+          <label class="field">
+            <span>JSON Data Path</span>
+            <input type="text" id="ghPath" class="input" value="data/games.json" placeholder="data/games.json" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Fine-Grained Personal Access Token (optional for read-only, required to commit)</span>
+          <input type="password" id="ghToken" class="input" placeholder="github_pat_..." autocomplete="off" />
+        </label>
+        <div class="modal-actions wrap">
+          <button type="button" class="btn btn-ghost btn-sm" id="exportJsonBtn">Download games.json</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="resetLocalCacheBtn">Reset Local Cache</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="pullFromGitHubBtn">Pull from GitHub</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script src="js/seed-fallback.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/hub.js"></script>
+</body>
+</html>
