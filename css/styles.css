@@ -1,6 +1,6 @@
 /* ==========================================================================
    GameHub — Authentication, Verification & Profile Styles
-   Matches the dark-theme Horizontal Prototype + Vertical Prototype states
+   Shared across index.html (Login), signup.html (Sign Up), and profile.html (Profile)
    ========================================================================== */
 
 :root {
@@ -26,7 +26,6 @@
   --text-main: #f8fafc;
   --text-muted: #9aa7bd;
   --text-dim: #6f7d95;
-  --text-heading-navy: #243b6b;
   --text-stat-dark: #16233d;
 
   --radius-sm: 6px;
@@ -135,6 +134,8 @@ body {
 }
 
 .nav-pill {
+  display: inline-block;
+  text-decoration: none;
   background: rgba(46, 125, 246, 0.22);
   color: #dbeafe;
   border: 1px solid rgba(96, 165, 250, 0.45);

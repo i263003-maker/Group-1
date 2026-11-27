@@ -1,7 +1,6 @@
 /* ==========================================================================
-   GameHub — Authentication, Verification & Profile Logic
-   Handles Login, Sign Up, 6-Digit Email Verification, Forgot Password Reset,
-   and User Profile / Edit Profile with LocalStorage persistence.
+   GameHub — Multi-Page Authentication, Verification & Profile Logic
+   Works across index.html (Login), signup.html (Sign Up), and profile.html (Profile)
    ========================================================================== */
 
 (() => {
@@ -15,7 +14,7 @@
     { game: "GTA V", rating: "8/10", comment: "Excellent open-world experience." }
   ];
 
-  // Pre-seeded demo user matching Horizontal Prototype Page 3 ("Player123")
+  // Pre-seeded demo account matching Horizontal Prototype Page 3 ("Player123")
   const DEFAULT_USER = {
     id: "user_player123",
     fullName: "Alex Mercer",
@@ -28,7 +27,7 @@
     welcomeNote: "Welcome to your profile!",
     age: "23",
     gender: "Male",
-    city: "Karachi",
+    city: "Islamabad",
     phone: "555-019-2026",
     about: "RPG & open-world fan reviewing PC and console titles on GameHub.",
     totalReviews: 12,
@@ -36,10 +35,10 @@
     reviews: DEFAULT_REVIEWS
   };
 
-  // In-memory state for pending verification & password reset codes
   const state = {
     pendingVerificationEmail: null,
     verificationCode: null,
+    rememberOnVerify: true,
     pendingResetEmail: null,
     resetCode: null
   };
@@ -99,37 +98,61 @@
     sessionStorage.removeItem(STORAGE_SESSION_KEY);
   }
 
-  // ==================== UI & NAVIGATION HELPERS ====================
+  function buildUserRecord({
+    fullName,
+    username,
+    email,
+    password,
+    newsletter = false,
+    tagline = "GameHub Member",
+    about = "Joined GameHub to rate and review games."
+  }) {
+    return {
+      id: `user_${Date.now()}`,
+      fullName,
+      username,
+      email,
+      password,
+      verified: false,
+      newsletter,
+      tagline,
+      welcomeNote: "Welcome to your profile!",
+      age: "",
+      gender: "Other",
+      city: "",
+      phone: "",
+      about,
+      totalReviews: 0,
+      savedGames: 0,
+      reviews: []
+    };
+  }
+
+  function deriveUniqueUsername(users, baseName) {
+    const taken = users.some((u) => u.username.toLowerCase() === baseName.toLowerCase());
+    return taken ? `${baseName}_${String(Date.now()).slice(-3)}` : baseName;
+  }
+
+  // ==================== SHARED UI HELPERS ====================
 
   const views = document.querySelectorAll(".view");
-  const navAuthBtn = document.getElementById("navAuthBtn");
   const demoToast = document.getElementById("demoToast");
   const demoToastMessage = document.getElementById("demoToastMessage");
+  const navAuthLink = document.getElementById("navAuthLink");
 
   function showView(viewId) {
     views.forEach((v) => v.classList.toggle("active", v.id === viewId));
     window.scrollTo({ top: 0, behavior: "smooth" });
-    updateNavbarAuth();
-  }
-
-  function updateNavbarAuth() {
-    const user = getCurrentUser();
-    if (user) {
-      navAuthBtn.textContent = user.username;
-      navAuthBtn.dataset.action = "profile";
-    } else {
-      navAuthBtn.textContent = "Login";
-      navAuthBtn.dataset.action = "login";
-    }
   }
 
   function showDemoToast(htmlMessage) {
+    if (!demoToast || !demoToastMessage) return;
     demoToastMessage.innerHTML = htmlMessage;
     demoToast.classList.remove("hidden");
   }
 
   function hideDemoToast() {
-    demoToast.classList.add("hidden");
+    if (demoToast) demoToast.classList.add("hidden");
   }
 
   function generateCode() {
@@ -140,7 +163,6 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   }
 
-  // Vertical Prototype field-level status ("✓" or "✕")
   function setFieldStatus(inputId, statusId, errorId, stateType, message = "") {
     const input = document.getElementById(inputId);
     const wrapper = input ? input.closest(".input-wrapper") : null;
@@ -173,7 +195,32 @@
     if (el) el.className = "form-alert hidden";
   }
 
-  // ==================== PASSWORD VISIBILITY TOGGLES ====================
+  // ==================== SHARED NAVBAR & TOGGLES ====================
+
+  const navToggle = document.getElementById("navToggle");
+  const navLinks = document.getElementById("navLinks");
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      const expanded = navLinks.classList.toggle("open");
+      navToggle.setAttribute("aria-expanded", String(expanded));
+    });
+  }
+
+  document.querySelectorAll(".nav-link[data-nav]").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (navLinks) navLinks.classList.remove("open");
+      showDemoToast(
+        `<strong>${link.dataset.nav}</strong> belongs to another GameHub team module. You can navigate between <a href="index.html" style="color:#93c5fd">Login</a>, <a href="signup.html" style="color:#93c5fd">Sign Up</a>, and <a href="profile.html" style="color:#93c5fd">Profile</a>.`
+      );
+    });
+  });
+
+  const demoToastClose = document.getElementById("demoToastClose");
+  if (demoToastClose) {
+    demoToastClose.addEventListener("click", hideDemoToast);
+  }
 
   document.querySelectorAll(".toggle-pw").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -186,333 +233,90 @@
     });
   });
 
-  // ==================== NAVBAR & FOOTER LINKS ====================
+  if (navAuthLink) {
+    const loggedInUser = getCurrentUser();
+    if (loggedInUser) {
+      navAuthLink.textContent = loggedInUser.username;
+      navAuthLink.href = "profile.html";
+    }
+  }
 
-  const navToggle = document.getElementById("navToggle");
-  const navLinks = document.getElementById("navLinks");
+  // ==================== SHARED VERIFICATION HELPER ====================
 
-  navToggle.addEventListener("click", () => {
-    const expanded = navLinks.classList.toggle("open");
-    navToggle.setAttribute("aria-expanded", String(expanded));
-  });
+  function initVerificationHandlers() {
+    const verifyForm = document.getElementById("verifyForm");
+    const verifyCodeInput = document.getElementById("verifyCodeInput");
+    const verifySubmitBtn = document.getElementById("verifySubmitBtn");
+    const resendBtn = document.getElementById("resendVerifyCodeBtn");
+    const backBtn = document.getElementById("backToLoginFromVerifyBtn");
 
-  document.getElementById("brandLink").addEventListener("click", (e) => {
-    e.preventDefault();
-    showView(getCurrentUser() ? "view-profile" : "view-login");
-  });
+    if (!verifyForm || !verifyCodeInput || !verifySubmitBtn) return;
 
-  navAuthBtn.addEventListener("click", () => {
-    showView(getCurrentUser() ? "view-profile" : "view-login");
-  });
+    verifyCodeInput.addEventListener("input", () => {
+      verifyCodeInput.value = verifyCodeInput.value.replace(/\D/g, "").slice(0, 6);
+      hideAlert("verifyAlert");
+      setFieldStatus("verifyCodeInput", "verifyCodeStatus", "verifyCodeError", "");
+      verifySubmitBtn.disabled = verifyCodeInput.value.length !== 6;
+    });
 
-  document.querySelectorAll(".nav-link").forEach((link) => {
-    link.addEventListener("click", (e) => {
+    verifyForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      navLinks.classList.remove("open");
-      const user = getCurrentUser();
-      showDemoToast(
-        `<strong>${link.textContent}</strong> is handled by other team modules. You are currently in the <strong>Login, Verification &amp; Profile</strong> module.`
-      );
-      if (user) {
-        showView("view-profile");
+      const entered = verifyCodeInput.value.trim();
+
+      if (entered !== state.verificationCode) {
+        setFieldStatus(
+          "verifyCodeInput",
+          "verifyCodeStatus",
+          "verifyCodeError",
+          "invalid",
+          "Invalid activation code. Please check the code and try again."
+        );
+        showAlert("verifyAlert", "Verification failed. Incorrect 6-digit code.");
+        return;
       }
+
+      const users = getUsers();
+      const userIndex = users.findIndex(
+        (u) => u.email.toLowerCase() === String(state.pendingVerificationEmail).toLowerCase()
+      );
+
+      if (userIndex === -1) {
+        showAlert("verifyAlert", "Account record not found. Please sign up again.");
+        return;
+      }
+
+      users[userIndex].verified = true;
+      saveUsers(users);
+      setSession(users[userIndex].id, state.rememberOnVerify);
+      window.location.href = "profile.html";
     });
-  });
 
-  document.getElementById("demoToastClose").addEventListener("click", hideDemoToast);
+    if (resendBtn) {
+      resendBtn.addEventListener("click", () => {
+        if (!state.pendingVerificationEmail) return;
+        state.verificationCode = generateCode();
+        showDemoToast(
+          `New activation code for <strong>${state.pendingVerificationEmail}</strong>: <strong>${state.verificationCode}</strong>`
+        );
+      });
+    }
 
-  // ==================== VIEW 1: LOGIN LOGIC ====================
-
-  const loginForm = document.getElementById("loginForm");
-  const loginIdentifier = document.getElementById("loginIdentifier");
-  const loginPassword = document.getElementById("loginPassword");
-  const rememberMe = document.getElementById("rememberMe");
-  const loginSubmitBtn = document.getElementById("loginSubmitBtn");
-
-  // Vertical Prototype: Grayed out / disabled LOGIN button while fields are blank
-  function syncLoginButtonState() {
-    const ready =
-      loginIdentifier.value.trim().length > 0 &&
-      loginPassword.value.trim().length > 0;
-    loginSubmitBtn.disabled = !ready;
+    if (backBtn) {
+      backBtn.addEventListener("click", () => showView("view-login"));
+    }
   }
-
-  loginIdentifier.addEventListener("input", () => {
-    hideAlert("loginAlert");
-    setFieldStatus("loginIdentifier", "loginIdentifierStatus", "loginIdentifierError", "");
-    syncLoginButtonState();
-  });
-
-  loginPassword.addEventListener("input", () => {
-    hideAlert("loginAlert");
-    setFieldStatus("loginPassword", "loginPasswordStatus", "loginPasswordError", "");
-    syncLoginButtonState();
-  });
-
-  loginForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    hideAlert("loginAlert");
-
-    const identifierVal = loginIdentifier.value.trim();
-    const passwordVal = loginPassword.value;
-    const user = findUserByIdentifier(identifierVal);
-
-    if (!user) {
-      setFieldStatus(
-        "loginIdentifier",
-        "loginIdentifierStatus",
-        "loginIdentifierError",
-        "invalid",
-        "No GameHub account found with that email or username."
-      );
-      showAlert("loginAlert", "Account not found. Please check your email/username or create an account.");
-      return;
-    }
-
-    if (user.password !== passwordVal) {
-      // Vertical Prototype: Large "X" error indicator beside password field
-      setFieldStatus(
-        "loginPassword",
-        "loginPasswordStatus",
-        "loginPasswordError",
-        "invalid",
-        "Incorrect password. Please try again or use Forgot Password."
-      );
-      showAlert("loginAlert", "Incorrect password for this account.");
-      return;
-    }
-
-    // If account exists but hasn't completed email verification yet
-    if (!user.verified) {
-      startEmailVerification(user.email);
-      showAlert(
-        "verifyAlert",
-        "Your account is not verified yet. Please enter the 6-digit activation code.",
-        "error"
-      );
-      return;
-    }
-
-    setSession(user.id, rememberMe.checked);
-    loginForm.reset();
-    syncLoginButtonState();
-    renderProfile(user);
-    showView("view-profile");
-  });
-
-  // Social quick-login demo buttons from vertical wireframe
-  document.querySelectorAll(".social-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const provider = btn.dataset.provider;
-      const user = getUsers()[0];
-      setSession(user.id, true);
-      renderProfile(user);
-      showView("view-profile");
-      showDemoToast(`Signed in via <strong>${provider}</strong> demo shortcut as <strong>${user.username}</strong>.`);
-    });
-  });
-
-  document.getElementById("goToSignupBtn").addEventListener("click", () => {
-    hideAlert("loginAlert");
-    showView("view-signup");
-  });
-
-  document.getElementById("goToForgotBtn").addEventListener("click", () => {
-    hideAlert("loginAlert");
-    resetForgotView();
-    showView("view-forgot");
-  });
-
-  // ==================== VIEW 2: SIGN UP LOGIC ====================
-
-  const signupForm = document.getElementById("signupForm");
-  const signupFullName = document.getElementById("signupFullName");
-  const signupUsername = document.getElementById("signupUsername");
-  const signupEmail = document.getElementById("signupEmail");
-  const signupConfirmEmail = document.getElementById("signupConfirmEmail");
-  const signupPassword = document.getElementById("signupPassword");
-  const signupConfirmPassword = document.getElementById("signupConfirmPassword");
-  const signupNewsletter = document.getElementById("signupNewsletter");
-  const signupTerms = document.getElementById("signupTerms");
-  const signupSubmitBtn = document.getElementById("signupSubmitBtn");
-
-  function syncSignupButtonState() {
-    const filled =
-      signupFullName.value.trim().length > 0 &&
-      signupUsername.value.trim().length > 0 &&
-      signupEmail.value.trim().length > 0 &&
-      signupConfirmEmail.value.trim().length > 0 &&
-      signupPassword.value.length > 0 &&
-      signupConfirmPassword.value.length > 0 &&
-      signupTerms.checked;
-    signupSubmitBtn.disabled = !filled;
-  }
-
-  [
-    signupFullName,
-    signupUsername,
-    signupEmail,
-    signupConfirmEmail,
-    signupPassword,
-    signupConfirmPassword
-  ].forEach((input) => {
-    input.addEventListener("input", () => {
-      hideAlert("signupAlert");
-      syncSignupButtonState();
-    });
-  });
-
-  signupTerms.addEventListener("change", () => {
-    document.getElementById("signupTermsError").textContent = "";
-    syncSignupButtonState();
-  });
-
-  signupForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    hideAlert("signupAlert");
-
-    let valid = true;
-    const fullName = signupFullName.value.trim();
-    const username = signupUsername.value.trim();
-    const email = signupEmail.value.trim();
-    const confirmEmail = signupConfirmEmail.value.trim();
-    const password = signupPassword.value;
-    const confirmPassword = signupConfirmPassword.value;
-
-    if (fullName.length < 2) {
-      setFieldStatus("signupFullName", "signupFullNameStatus", "signupFullNameError", "invalid", "Enter your full name.");
-      valid = false;
-    } else {
-      setFieldStatus("signupFullName", "signupFullNameStatus", "signupFullNameError", "valid");
-    }
-
-    const users = getUsers();
-    const usernameTaken = users.some((u) => u.username.toLowerCase() === username.toLowerCase());
-    if (username.length < 3 || /\s/.test(username)) {
-      setFieldStatus(
-        "signupUsername",
-        "signupUsernameStatus",
-        "signupUsernameError",
-        "invalid",
-        "Username must be at least 3 characters with no spaces."
-      );
-      valid = false;
-    } else if (usernameTaken) {
-      setFieldStatus("signupUsername", "signupUsernameStatus", "signupUsernameError", "invalid", "That username is already taken.");
-      valid = false;
-    } else {
-      setFieldStatus("signupUsername", "signupUsernameStatus", "signupUsernameError", "valid");
-    }
-
-    const emailTaken = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (!isValidEmail(email)) {
-      setFieldStatus("signupEmail", "signupEmailStatus", "signupEmailError", "invalid", "Enter a valid email address.");
-      valid = false;
-    } else if (emailTaken) {
-      setFieldStatus("signupEmail", "signupEmailStatus", "signupEmailError", "invalid", "An account with this email already exists.");
-      valid = false;
-    } else {
-      setFieldStatus("signupEmail", "signupEmailStatus", "signupEmailError", "valid");
-    }
-
-    if (confirmEmail.toLowerCase() !== email.toLowerCase() || !confirmEmail) {
-      setFieldStatus("signupConfirmEmail", "signupConfirmEmailStatus", "signupConfirmEmailError", "invalid", "Emails do not match.");
-      valid = false;
-    } else {
-      setFieldStatus("signupConfirmEmail", "signupConfirmEmailStatus", "signupConfirmEmailError", "valid");
-    }
-
-    if (password.length < 6) {
-      setFieldStatus(
-        "signupPassword",
-        "signupPasswordStatus",
-        "signupPasswordError",
-        "invalid",
-        "Password must be at least 6 characters."
-      );
-      valid = false;
-    } else {
-      setFieldStatus("signupPassword", "signupPasswordStatus", "signupPasswordError", "valid");
-    }
-
-    if (confirmPassword !== password || !confirmPassword) {
-      setFieldStatus(
-        "signupConfirmPassword",
-        "signupConfirmPasswordStatus",
-        "signupConfirmPasswordError",
-        "invalid",
-        "Passwords do not match."
-      );
-      valid = false;
-    } else {
-      setFieldStatus("signupConfirmPassword", "signupConfirmPasswordStatus", "signupConfirmPasswordError", "valid");
-    }
-
-    if (!signupTerms.checked) {
-      document.getElementById("signupTermsError").textContent = "You must agree to the terms to create an account.";
-      valid = false;
-    }
-
-    if (!valid) {
-      showAlert("signupAlert", "Please fix the highlighted fields before continuing.");
-      return;
-    }
-
-    const newUser = {
-      id: `user_${Date.now()}`,
-      fullName,
-      username,
-      email,
-      password,
-      verified: false,
-      newsletter: signupNewsletter.checked,
-      tagline: "New GameHub Reviewer",
-      welcomeNote: "Welcome to your profile!",
-      age: "",
-      gender: "Other",
-      city: "",
-      phone: "",
-      about: "Just joined GameHub to rate and review games.",
-      totalReviews: 0,
-      savedGames: 0,
-      reviews: []
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    signupForm.reset();
-    [
-      ["signupFullName", "signupFullNameStatus", "signupFullNameError"],
-      ["signupUsername", "signupUsernameStatus", "signupUsernameError"],
-      ["signupEmail", "signupEmailStatus", "signupEmailError"],
-      ["signupConfirmEmail", "signupConfirmEmailStatus", "signupConfirmEmailError"],
-      ["signupPassword", "signupPasswordStatus", "signupPasswordError"],
-      ["signupConfirmPassword", "signupConfirmPasswordStatus", "signupConfirmPasswordError"]
-    ].forEach(([i, s, err]) => setFieldStatus(i, s, err, ""));
-    syncSignupButtonState();
-
-    startEmailVerification(newUser.email);
-  });
-
-  document.getElementById("goToLoginFromSignupBtn").addEventListener("click", () => {
-    hideAlert("signupAlert");
-    showView("view-login");
-  });
-
-  // ==================== VIEW 3: ACCOUNT VERIFICATION ====================
-
-  const verifyForm = document.getElementById("verifyForm");
-  const verifyCodeInput = document.getElementById("verifyCodeInput");
-  const verifySubmitBtn = document.getElementById("verifySubmitBtn");
-  const verifyEmailDisplay = document.getElementById("verifyEmailDisplay");
 
   function startEmailVerification(email) {
     state.pendingVerificationEmail = email;
     state.verificationCode = generateCode();
-    verifyEmailDisplay.textContent = email;
-    verifyCodeInput.value = "";
-    verifySubmitBtn.disabled = true;
+    const emailDisplay = document.getElementById("verifyEmailDisplay");
+    const codeInput = document.getElementById("verifyCodeInput");
+    const submitBtn = document.getElementById("verifySubmitBtn");
+
+    if (emailDisplay) emailDisplay.textContent = email;
+    if (codeInput) codeInput.value = "";
+    if (submitBtn) submitBtn.disabled = true;
+
     hideAlert("verifyAlert");
     setFieldStatus("verifyCodeInput", "verifyCodeStatus", "verifyCodeError", "");
     showView("view-verify");
@@ -521,375 +325,625 @@
     );
   }
 
-  verifyCodeInput.addEventListener("input", () => {
-    verifyCodeInput.value = verifyCodeInput.value.replace(/\D/g, "").slice(0, 6);
-    hideAlert("verifyAlert");
-    setFieldStatus("verifyCodeInput", "verifyCodeStatus", "verifyCodeError", "");
-    verifySubmitBtn.disabled = verifyCodeInput.value.length !== 6;
-  });
+  // ==================== PAGE 1: LOGIN & FORGOT PASSWORD ====================
 
-  verifyForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const entered = verifyCodeInput.value.trim();
+  function initLoginPage() {
+    initVerificationHandlers();
 
-    if (entered !== state.verificationCode) {
-      setFieldStatus(
-        "verifyCodeInput",
-        "verifyCodeStatus",
-        "verifyCodeError",
-        "invalid",
-        "Invalid activation code. Please check the code and try again."
-      );
-      showAlert("verifyAlert", "Verification failed. Incorrect 6-digit code.");
-      return;
+    const loginForm = document.getElementById("loginForm");
+    const loginIdentifier = document.getElementById("loginIdentifier");
+    const loginPassword = document.getElementById("loginPassword");
+    const rememberMe = document.getElementById("rememberMe");
+    const loginSubmitBtn = document.getElementById("loginSubmitBtn");
+
+    function syncLoginButtonState() {
+      const ready =
+        loginIdentifier.value.trim().length > 0 &&
+        loginPassword.value.trim().length > 0;
+      loginSubmitBtn.disabled = !ready;
     }
 
-    const users = getUsers();
-    const userIndex = users.findIndex(
-      (u) => u.email.toLowerCase() === String(state.pendingVerificationEmail).toLowerCase()
-    );
+    loginIdentifier.addEventListener("input", () => {
+      hideAlert("loginAlert");
+      setFieldStatus("loginIdentifier", "loginIdentifierStatus", "loginIdentifierError", "");
+      syncLoginButtonState();
+    });
 
-    if (userIndex === -1) {
-      showAlert("verifyAlert", "Account record not found. Please sign up again.");
-      return;
-    }
+    loginPassword.addEventListener("input", () => {
+      hideAlert("loginAlert");
+      setFieldStatus("loginPassword", "loginPasswordStatus", "loginPasswordError", "");
+      syncLoginButtonState();
+    });
 
-    users[userIndex].verified = true;
-    saveUsers(users);
-    setSession(users[userIndex].id, true);
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      hideAlert("loginAlert");
 
-    hideDemoToast();
-    renderProfile(users[userIndex]);
-    showView("view-profile");
-  });
+      const identifierVal = loginIdentifier.value.trim();
+      const passwordVal = loginPassword.value;
+      const user = findUserByIdentifier(identifierVal);
+      state.rememberOnVerify = rememberMe.checked;
 
-  document.getElementById("resendVerifyCodeBtn").addEventListener("click", () => {
-    if (!state.pendingVerificationEmail) return;
-    state.verificationCode = generateCode();
-    showDemoToast(
-      `New activation code for <strong>${state.pendingVerificationEmail}</strong>: <strong>${state.verificationCode}</strong>`
-    );
-  });
+      if (!user) {
+        // Allow any valid email or username (3+ chars) & password (6+ chars) to log in via 6-digit verification
+        const looksLikeEmail = identifierVal.includes("@");
+        let valid = true;
 
-  document.getElementById("backToLoginFromVerifyBtn").addEventListener("click", () => {
-    showView("view-login");
-  });
+        if (looksLikeEmail && !isValidEmail(identifierVal)) {
+          setFieldStatus(
+            "loginIdentifier",
+            "loginIdentifierStatus",
+            "loginIdentifierError",
+            "invalid",
+            "Please enter a valid email address."
+          );
+          valid = false;
+        } else if (!looksLikeEmail && (identifierVal.length < 3 || /\s/.test(identifierVal))) {
+          setFieldStatus(
+            "loginIdentifier",
+            "loginIdentifierStatus",
+            "loginIdentifierError",
+            "invalid",
+            "Username must be at least 3 characters with no spaces."
+          );
+          valid = false;
+        } else {
+          setFieldStatus("loginIdentifier", "loginIdentifierStatus", "loginIdentifierError", "valid");
+        }
 
-  // ==================== VIEW 4: FORGOT PASSWORD & RESET ====================
+        if (passwordVal.length < 6) {
+          setFieldStatus(
+            "loginPassword",
+            "loginPasswordStatus",
+            "loginPasswordError",
+            "invalid",
+            "Password must be at least 6 characters."
+          );
+          valid = false;
+        } else {
+          setFieldStatus("loginPassword", "loginPasswordStatus", "loginPasswordError", "valid");
+        }
 
-  const forgotEmailForm = document.getElementById("forgotEmailForm");
-  const forgotEmail = document.getElementById("forgotEmail");
-  const forgotSendBtn = document.getElementById("forgotSendBtn");
+        if (!valid) {
+          showAlert("loginAlert", "Please enter a valid email/username and password (6+ characters).");
+          return;
+        }
 
-  const resetPasswordForm = document.getElementById("resetPasswordForm");
-  const resetEmailDisplay = document.getElementById("resetEmailDisplay");
-  const resetCodeInput = document.getElementById("resetCodeInput");
-  const resetNewPassword = document.getElementById("resetNewPassword");
-  const resetConfirmPassword = document.getElementById("resetConfirmPassword");
-  const resetSubmitBtn = document.getElementById("resetSubmitBtn");
-  const resetSuccessBox = document.getElementById("resetSuccessBox");
+        const users = getUsers();
+        const baseName = looksLikeEmail ? identifierVal.split("@")[0] : identifierVal;
+        const derivedUsername = deriveUniqueUsername(users, baseName);
+        const derivedEmail = looksLikeEmail
+          ? identifierVal
+          : `${identifierVal.toLowerCase()}@gamehub.com`;
 
-  function resetForgotView() {
-    forgotEmailForm.classList.remove("hidden");
-    resetPasswordForm.classList.add("hidden");
-    resetSuccessBox.classList.add("hidden");
-    forgotEmailForm.reset();
-    resetPasswordForm.reset();
-    forgotSendBtn.disabled = true;
-    resetSubmitBtn.disabled = true;
-    hideAlert("forgotAlert");
-    hideAlert("resetAlert");
-    setFieldStatus("forgotEmail", "forgotEmailStatus", "forgotEmailError", "");
-    document.getElementById("forgotSubtitle").textContent =
-      "Enter your email and we will send you an activation code";
-  }
+        const quickUser = buildUserRecord({
+          fullName: baseName,
+          username: derivedUsername,
+          email: derivedEmail,
+          password: passwordVal,
+          tagline: "GameHub Member",
+          about: "Signed in to GameHub to rate and review games."
+        });
 
-  forgotEmail.addEventListener("input", () => {
-    hideAlert("forgotAlert");
-    setFieldStatus("forgotEmail", "forgotEmailStatus", "forgotEmailError", "");
-    forgotSendBtn.disabled = forgotEmail.value.trim().length === 0;
-  });
+        users.push(quickUser);
+        saveUsers(users);
+        startEmailVerification(quickUser.email);
+        return;
+      }
 
-  forgotEmailForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const emailVal = forgotEmail.value.trim();
+      if (user.password !== passwordVal) {
+        setFieldStatus(
+          "loginPassword",
+          "loginPasswordStatus",
+          "loginPasswordError",
+          "invalid",
+          "Incorrect password. Please try again or use Forgot Password."
+        );
+        showAlert("loginAlert", "Incorrect password for this account.");
+        return;
+      }
 
-    if (!isValidEmail(emailVal)) {
-      setFieldStatus(
-        "forgotEmail",
-        "forgotEmailStatus",
-        "forgotEmailError",
-        "invalid",
-        "Enter a valid email address."
-      );
-      return;
-    }
+      if (!user.verified) {
+        startEmailVerification(user.email);
+        showAlert(
+          "verifyAlert",
+          "Your account is not verified yet. Please enter the 6-digit activation code.",
+          "error"
+        );
+        return;
+      }
 
-    const user = findUserByEmail(emailVal);
-    if (!user) {
-      // Vertical Prototype: incorrect email shows "X" indicator
-      setFieldStatus(
-        "forgotEmail",
-        "forgotEmailStatus",
-        "forgotEmailError",
-        "invalid",
-        "No GameHub account is registered with this email."
-      );
-      showAlert("forgotAlert", "Incorrect email address.");
-      return;
-    }
+      setSession(user.id, rememberMe.checked);
+      window.location.href = "profile.html";
+    });
 
-    state.pendingResetEmail = user.email;
-    state.resetCode = generateCode();
+    document.querySelectorAll(".social-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const user = getUsers()[0];
+        setSession(user.id, true);
+        window.location.href = "profile.html";
+      });
+    });
 
-    forgotEmailForm.classList.add("hidden");
-    resetPasswordForm.classList.remove("hidden");
-    resetEmailDisplay.textContent = user.email;
-    document.getElementById("forgotSubtitle").textContent =
-      "Verify your code and create a new password";
+    // Forgot Password flow on Login page
+    const forgotEmailForm = document.getElementById("forgotEmailForm");
+    const forgotEmail = document.getElementById("forgotEmail");
+    const forgotSendBtn = document.getElementById("forgotSendBtn");
+    const resetPasswordForm = document.getElementById("resetPasswordForm");
+    const resetEmailDisplay = document.getElementById("resetEmailDisplay");
+    const resetCodeInput = document.getElementById("resetCodeInput");
+    const resetNewPassword = document.getElementById("resetNewPassword");
+    const resetConfirmPassword = document.getElementById("resetConfirmPassword");
+    const resetSubmitBtn = document.getElementById("resetSubmitBtn");
+    const resetSuccessBox = document.getElementById("resetSuccessBox");
 
-    showDemoToast(
-      `Password reset code for <strong>${user.email}</strong>: <strong>${state.resetCode}</strong>`
-    );
-  });
-
-  function syncResetButtonState() {
-    const ready =
-      resetCodeInput.value.trim().length === 6 &&
-      resetNewPassword.value.length > 0 &&
-      resetConfirmPassword.value.length > 0;
-    resetSubmitBtn.disabled = !ready;
-  }
-
-  resetCodeInput.addEventListener("input", () => {
-    resetCodeInput.value = resetCodeInput.value.replace(/\D/g, "").slice(0, 6);
-    hideAlert("resetAlert");
-    setFieldStatus("resetCodeInput", "resetCodeStatus", "resetCodeError", "");
-    syncResetButtonState();
-  });
-
-  [resetNewPassword, resetConfirmPassword].forEach((input) => {
-    input.addEventListener("input", () => {
+    function resetForgotView() {
+      forgotEmailForm.classList.remove("hidden");
+      resetPasswordForm.classList.add("hidden");
+      resetSuccessBox.classList.add("hidden");
+      forgotEmailForm.reset();
+      resetPasswordForm.reset();
+      forgotSendBtn.disabled = true;
+      resetSubmitBtn.disabled = true;
+      hideAlert("forgotAlert");
       hideAlert("resetAlert");
+      setFieldStatus("forgotEmail", "forgotEmailStatus", "forgotEmailError", "");
+      document.getElementById("forgotSubtitle").textContent =
+        "Enter your email and we will send you an activation code";
+    }
+
+    document.getElementById("goToForgotBtn").addEventListener("click", () => {
+      hideAlert("loginAlert");
+      resetForgotView();
+      showView("view-forgot");
+    });
+
+    forgotEmail.addEventListener("input", () => {
+      hideAlert("forgotAlert");
+      setFieldStatus("forgotEmail", "forgotEmailStatus", "forgotEmailError", "");
+      forgotSendBtn.disabled = forgotEmail.value.trim().length === 0;
+    });
+
+    forgotEmailForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const emailVal = forgotEmail.value.trim();
+
+      if (!isValidEmail(emailVal)) {
+        setFieldStatus(
+          "forgotEmail",
+          "forgotEmailStatus",
+          "forgotEmailError",
+          "invalid",
+          "Enter a valid email address."
+        );
+        return;
+      }
+
+      const user = findUserByEmail(emailVal);
+      const targetEmail = user ? user.email : emailVal;
+
+      state.pendingResetEmail = targetEmail;
+      state.resetCode = generateCode();
+
+      forgotEmailForm.classList.add("hidden");
+      resetPasswordForm.classList.remove("hidden");
+      resetEmailDisplay.textContent = targetEmail;
+      document.getElementById("forgotSubtitle").textContent =
+        "Verify your code and create a new password";
+
+      showDemoToast(
+        `Password reset code for <strong>${targetEmail}</strong>: <strong>${state.resetCode}</strong>`
+      );
+    });
+
+    function syncResetButtonState() {
+      const ready =
+        resetCodeInput.value.trim().length === 6 &&
+        resetNewPassword.value.length > 0 &&
+        resetConfirmPassword.value.length > 0;
+      resetSubmitBtn.disabled = !ready;
+    }
+
+    resetCodeInput.addEventListener("input", () => {
+      resetCodeInput.value = resetCodeInput.value.replace(/\D/g, "").slice(0, 6);
+      hideAlert("resetAlert");
+      setFieldStatus("resetCodeInput", "resetCodeStatus", "resetCodeError", "");
       syncResetButtonState();
     });
-  });
 
-  resetPasswordForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    hideAlert("resetAlert");
-    let valid = true;
-
-    if (resetCodeInput.value.trim() !== state.resetCode) {
-      setFieldStatus("resetCodeInput", "resetCodeStatus", "resetCodeError", "invalid", "Invalid reset code.");
-      valid = false;
-    } else {
-      setFieldStatus("resetCodeInput", "resetCodeStatus", "resetCodeError", "valid");
-    }
-
-    if (resetNewPassword.value.length < 6) {
-      setFieldStatus(
-        "resetNewPassword",
-        "resetNewPasswordStatus",
-        "resetNewPasswordError",
-        "invalid",
-        "Password must be at least 6 characters."
-      );
-      valid = false;
-    } else {
-      setFieldStatus("resetNewPassword", "resetNewPasswordStatus", "resetNewPasswordError", "valid");
-    }
-
-    if (resetConfirmPassword.value !== resetNewPassword.value) {
-      setFieldStatus(
-        "resetConfirmPassword",
-        "resetConfirmPasswordStatus",
-        "resetConfirmPasswordError",
-        "invalid",
-        "Passwords do not match."
-      );
-      valid = false;
-    } else {
-      setFieldStatus("resetConfirmPassword", "resetConfirmPasswordStatus", "resetConfirmPasswordError", "valid");
-    }
-
-    if (!valid) {
-      showAlert("resetAlert", "Please fix the errors above to reset your password.");
-      return;
-    }
-
-    const users = getUsers();
-    const idx = users.findIndex(
-      (u) => u.email.toLowerCase() === String(state.pendingResetEmail).toLowerCase()
-    );
-    if (idx !== -1) {
-      users[idx].password = resetNewPassword.value;
-      users[idx].verified = true;
-      saveUsers(users);
-    }
-
-    hideDemoToast();
-    resetPasswordForm.classList.add("hidden");
-    resetSuccessBox.classList.remove("hidden");
-  });
-
-  document.getElementById("resendResetCodeBtn").addEventListener("click", () => {
-    if (!state.pendingResetEmail) return;
-    state.resetCode = generateCode();
-    showDemoToast(
-      `New reset code for <strong>${state.pendingResetEmail}</strong>: <strong>${state.resetCode}</strong>`
-    );
-  });
-
-  [
-    "backToLoginFromForgotBtn",
-    "backToLoginFromResetBtn",
-    "resetDoneToLoginBtn"
-  ].forEach((id) => {
-    document.getElementById(id).addEventListener("click", () => {
-      showView("view-login");
-    });
-  });
-
-  // ==================== VIEW 5 & 6: PROFILE & EDIT PROFILE ====================
-
-  function renderProfile(user) {
-    document.getElementById("profileUsername").textContent = user.username;
-    document.getElementById("profileTagline").textContent = user.tagline || "Gaming enthusiast";
-    document.getElementById("profileWelcome").textContent = user.welcomeNote || "Welcome to your profile!";
-
-    const metaParts = [user.fullName, user.city, user.email].filter(Boolean);
-    document.getElementById("profileMeta").textContent = metaParts.join(" • ");
-
-    const badge = document.getElementById("profileVerifiedBadge");
-    badge.textContent = user.verified ? "✓ Verified" : "Unverified";
-
-    document.getElementById("statReviews").textContent = String(user.totalReviews ?? 0).padStart(2, "0");
-    document.getElementById("statSaved").textContent = String(user.savedGames ?? 0).padStart(2, "0");
-
-    const listEl = document.getElementById("recentReviewsList");
-    listEl.innerHTML = "";
-    const reviews = Array.isArray(user.reviews) ? user.reviews : [];
-
-    if (reviews.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "review-item";
-      empty.innerHTML =
-        '<div class="review-item-title">No reviews yet</div><p class="review-item-body">Explore games on GameHub to post your first rating and review.</p>';
-      listEl.appendChild(empty);
-    } else {
-      reviews.forEach((rev) => {
-        const card = document.createElement("div");
-        card.className = "review-item";
-
-        const title = document.createElement("div");
-        title.className = "review-item-title";
-        title.textContent = `${rev.game} ⭐ ${rev.rating}`;
-
-        const body = document.createElement("p");
-        body.className = "review-item-body";
-        body.textContent = rev.comment;
-
-        card.append(title, body);
-        listEl.appendChild(card);
+    [resetNewPassword, resetConfirmPassword].forEach((input) => {
+      input.addEventListener("input", () => {
+        hideAlert("resetAlert");
+        syncResetButtonState();
       });
-    }
-  }
-
-  function populateEditForm(user) {
-    document.getElementById("editFullName").value = user.fullName || "";
-    document.getElementById("editUsername").value = user.username || "";
-    document.getElementById("editAge").value = user.age || "";
-    document.getElementById("editCity").value = user.city || "";
-    document.getElementById("editTagline").value = user.tagline || "";
-    document.getElementById("editEmail").value = user.email || "";
-    document.getElementById("editPhone").value = user.phone || "";
-    document.getElementById("editAbout").value = user.about || "";
-
-    const genderRadios = document.querySelectorAll('input[name="editGender"]');
-    genderRadios.forEach((r) => {
-      r.checked = r.value === (user.gender || "Other");
     });
-    hideAlert("editProfileAlert");
+
+    resetPasswordForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      hideAlert("resetAlert");
+      let valid = true;
+
+      if (resetCodeInput.value.trim() !== state.resetCode) {
+        setFieldStatus("resetCodeInput", "resetCodeStatus", "resetCodeError", "invalid", "Invalid reset code.");
+        valid = false;
+      } else {
+        setFieldStatus("resetCodeInput", "resetCodeStatus", "resetCodeError", "valid");
+      }
+
+      if (resetNewPassword.value.length < 6) {
+        setFieldStatus(
+          "resetNewPassword",
+          "resetNewPasswordStatus",
+          "resetNewPasswordError",
+          "invalid",
+          "Password must be at least 6 characters."
+        );
+        valid = false;
+      } else {
+        setFieldStatus("resetNewPassword", "resetNewPasswordStatus", "resetNewPasswordError", "valid");
+      }
+
+      if (resetConfirmPassword.value !== resetNewPassword.value) {
+        setFieldStatus(
+          "resetConfirmPassword",
+          "resetConfirmPasswordStatus",
+          "resetConfirmPasswordError",
+          "invalid",
+          "Passwords do not match."
+        );
+        valid = false;
+      } else {
+        setFieldStatus("resetConfirmPassword", "resetConfirmPasswordStatus", "resetConfirmPasswordError", "valid");
+      }
+
+      if (!valid) {
+        showAlert("resetAlert", "Please fix the errors above to reset your password.");
+        return;
+      }
+
+      const users = getUsers();
+      const targetEmail = String(state.pendingResetEmail);
+      const idx = users.findIndex(
+        (u) => u.email.toLowerCase() === targetEmail.toLowerCase()
+      );
+      if (idx !== -1) {
+        users[idx].password = resetNewPassword.value;
+        users[idx].verified = true;
+      } else {
+        const baseName = targetEmail.split("@")[0];
+        const created = buildUserRecord({
+          fullName: baseName,
+          username: deriveUniqueUsername(users, baseName),
+          email: targetEmail,
+          password: resetNewPassword.value
+        });
+        created.verified = true;
+        users.push(created);
+      }
+      saveUsers(users);
+
+      hideDemoToast();
+      resetPasswordForm.classList.add("hidden");
+      resetSuccessBox.classList.remove("hidden");
+    });
+
+    document.getElementById("resendResetCodeBtn").addEventListener("click", () => {
+      if (!state.pendingResetEmail) return;
+      state.resetCode = generateCode();
+      showDemoToast(
+        `New reset code for <strong>${state.pendingResetEmail}</strong>: <strong>${state.resetCode}</strong>`
+      );
+    });
+
+    [
+      "backToLoginFromForgotBtn",
+      "backToLoginFromResetBtn",
+      "resetDoneToLoginBtn"
+    ].forEach((id) => {
+      document.getElementById(id).addEventListener("click", () => showView("view-login"));
+    });
   }
 
-  document.getElementById("editProfileBtn").addEventListener("click", () => {
-    const user = getCurrentUser();
-    if (!user) return showView("view-login");
-    populateEditForm(user);
-    showView("view-edit-profile");
-  });
+  // ==================== PAGE 2: SIGN UP & VERIFICATION ====================
 
-  document.getElementById("backToProfileBtn").addEventListener("click", () => {
-    const user = getCurrentUser();
-    if (!user) return showView("view-login");
-    renderProfile(user);
-    showView("view-profile");
-  });
+  function initSignupPage() {
+    initVerificationHandlers();
 
-  document.getElementById("editProfileForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const current = getCurrentUser();
-    if (!current) return showView("view-login");
+    const signupForm = document.getElementById("signupForm");
+    const signupFullName = document.getElementById("signupFullName");
+    const signupUsername = document.getElementById("signupUsername");
+    const signupEmail = document.getElementById("signupEmail");
+    const signupConfirmEmail = document.getElementById("signupConfirmEmail");
+    const signupPassword = document.getElementById("signupPassword");
+    const signupConfirmPassword = document.getElementById("signupConfirmPassword");
+    const signupNewsletter = document.getElementById("signupNewsletter");
+    const signupTerms = document.getElementById("signupTerms");
+    const signupSubmitBtn = document.getElementById("signupSubmitBtn");
 
-    const fullName = document.getElementById("editFullName").value.trim();
-    const username = document.getElementById("editUsername").value.trim();
-    const email = document.getElementById("editEmail").value.trim();
-
-    if (!fullName || !username || !isValidEmail(email)) {
-      showAlert("editProfileAlert", "Please provide a valid full name, username, and email.");
-      return;
+    function syncSignupButtonState() {
+      const filled =
+        signupFullName.value.trim().length > 0 &&
+        signupUsername.value.trim().length > 0 &&
+        signupEmail.value.trim().length > 0 &&
+        signupConfirmEmail.value.trim().length > 0 &&
+        signupPassword.value.length > 0 &&
+        signupConfirmPassword.value.length > 0 &&
+        signupTerms.checked;
+      signupSubmitBtn.disabled = !filled;
     }
 
-    const users = getUsers();
-    const duplicate = users.some(
-      (u) =>
-        u.id !== current.id &&
-        (u.username.toLowerCase() === username.toLowerCase() ||
-          u.email.toLowerCase() === email.toLowerCase())
-    );
-    if (duplicate) {
-      showAlert("editProfileAlert", "That username or email is already used by another account.");
-      return;
+    [
+      signupFullName,
+      signupUsername,
+      signupEmail,
+      signupConfirmEmail,
+      signupPassword,
+      signupConfirmPassword
+    ].forEach((input) => {
+      input.addEventListener("input", () => {
+        hideAlert("signupAlert");
+        syncSignupButtonState();
+      });
+    });
+
+    signupTerms.addEventListener("change", () => {
+      document.getElementById("signupTermsError").textContent = "";
+      syncSignupButtonState();
+    });
+
+    signupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      hideAlert("signupAlert");
+
+      let valid = true;
+      const fullName = signupFullName.value.trim();
+      const username = signupUsername.value.trim();
+      const email = signupEmail.value.trim();
+      const confirmEmail = signupConfirmEmail.value.trim();
+      const password = signupPassword.value;
+      const confirmPassword = signupConfirmPassword.value;
+
+      if (fullName.length < 2) {
+        setFieldStatus("signupFullName", "signupFullNameStatus", "signupFullNameError", "invalid", "Enter your full name.");
+        valid = false;
+      } else {
+        setFieldStatus("signupFullName", "signupFullNameStatus", "signupFullNameError", "valid");
+      }
+
+      const users = getUsers();
+      const usernameTaken = users.some((u) => u.username.toLowerCase() === username.toLowerCase());
+      if (username.length < 3 || /\s/.test(username)) {
+        setFieldStatus(
+          "signupUsername",
+          "signupUsernameStatus",
+          "signupUsernameError",
+          "invalid",
+          "Username must be at least 3 characters with no spaces."
+        );
+        valid = false;
+      } else if (usernameTaken) {
+        setFieldStatus("signupUsername", "signupUsernameStatus", "signupUsernameError", "invalid", "That username is already taken.");
+        valid = false;
+      } else {
+        setFieldStatus("signupUsername", "signupUsernameStatus", "signupUsernameError", "valid");
+      }
+
+      const emailTaken = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (!isValidEmail(email)) {
+        setFieldStatus("signupEmail", "signupEmailStatus", "signupEmailError", "invalid", "Enter a valid email address.");
+        valid = false;
+      } else if (emailTaken) {
+        setFieldStatus("signupEmail", "signupEmailStatus", "signupEmailError", "invalid", "An account with this email already exists.");
+        valid = false;
+      } else {
+        setFieldStatus("signupEmail", "signupEmailStatus", "signupEmailError", "valid");
+      }
+
+      if (confirmEmail.toLowerCase() !== email.toLowerCase() || !confirmEmail) {
+        setFieldStatus("signupConfirmEmail", "signupConfirmEmailStatus", "signupConfirmEmailError", "invalid", "Emails do not match.");
+        valid = false;
+      } else {
+        setFieldStatus("signupConfirmEmail", "signupConfirmEmailStatus", "signupConfirmEmailError", "valid");
+      }
+
+      if (password.length < 6) {
+        setFieldStatus(
+          "signupPassword",
+          "signupPasswordStatus",
+          "signupPasswordError",
+          "invalid",
+          "Password must be at least 6 characters."
+        );
+        valid = false;
+      } else {
+        setFieldStatus("signupPassword", "signupPasswordStatus", "signupPasswordError", "valid");
+      }
+
+      if (confirmPassword !== password || !confirmPassword) {
+        setFieldStatus(
+          "signupConfirmPassword",
+          "signupConfirmPasswordStatus",
+          "signupConfirmPasswordError",
+          "invalid",
+          "Passwords do not match."
+        );
+        valid = false;
+      } else {
+        setFieldStatus("signupConfirmPassword", "signupConfirmPasswordStatus", "signupConfirmPasswordError", "valid");
+      }
+
+      if (!signupTerms.checked) {
+        document.getElementById("signupTermsError").textContent = "You must agree to the terms to create an account.";
+        valid = false;
+      }
+
+      if (!valid) {
+        showAlert("signupAlert", "Please fix the highlighted fields before continuing.");
+        return;
+      }
+
+      const newUser = buildUserRecord({
+        fullName,
+        username,
+        email,
+        password,
+        newsletter: signupNewsletter.checked,
+        tagline: "New GameHub Reviewer",
+        about: "Just joined GameHub to rate and review games."
+      });
+
+      users.push(newUser);
+      saveUsers(users);
+      startEmailVerification(newUser.email);
+    });
+  }
+
+  // ==================== PAGE 3: USER PROFILE & EDIT PROFILE ====================
+
+  function initProfilePage() {
+    function getActiveOrPreviewUser() {
+      return getCurrentUser() || getUsers()[0];
     }
 
-    const selectedGender =
-      document.querySelector('input[name="editGender"]:checked')?.value || "Other";
+    function renderProfile(user) {
+      document.getElementById("profileUsername").textContent = user.username;
+      document.getElementById("profileTagline").textContent = user.tagline || "Gaming enthusiast";
+      document.getElementById("profileWelcome").textContent = user.welcomeNote || "Welcome to your profile!";
 
-    const idx = users.findIndex((u) => u.id === current.id);
-    if (idx === -1) return;
+      const metaParts = [user.fullName, user.city, user.email].filter(Boolean);
+      document.getElementById("profileMeta").textContent = metaParts.join(" • ");
 
-    users[idx] = {
-      ...users[idx],
-      fullName,
-      username,
-      email,
-      age: document.getElementById("editAge").value.trim(),
-      gender: selectedGender,
-      city: document.getElementById("editCity").value.trim(),
-      tagline: document.getElementById("editTagline").value.trim() || "Gaming enthusiast",
-      phone: document.getElementById("editPhone").value.trim(),
-      about: document.getElementById("editAbout").value.trim()
-    };
+      const badge = document.getElementById("profileVerifiedBadge");
+      badge.textContent = user.verified ? "✓ Verified" : "Unverified";
 
-    saveUsers(users);
-    renderProfile(users[idx]);
-    showView("view-profile");
-  });
+      document.getElementById("statReviews").textContent = String(user.totalReviews ?? 0).padStart(2, "0");
+      document.getElementById("statSaved").textContent = String(user.savedGames ?? 0).padStart(2, "0");
 
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    clearSession();
-    hideDemoToast();
-    showView("view-login");
-  });
+      const listEl = document.getElementById("recentReviewsList");
+      listEl.innerHTML = "";
+      const reviews = Array.isArray(user.reviews) ? user.reviews : [];
 
-  // ==================== INITIALIZATION ====================
+      if (reviews.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "review-item";
+        empty.innerHTML =
+          '<div class="review-item-title">No reviews yet</div><p class="review-item-body">Explore games on GameHub to post your first rating and review.</p>';
+        listEl.appendChild(empty);
+      } else {
+        reviews.forEach((rev) => {
+          const card = document.createElement("div");
+          card.className = "review-item";
 
-  const activeUser = getCurrentUser();
-  if (activeUser) {
+          const title = document.createElement("div");
+          title.className = "review-item-title";
+          title.textContent = `${rev.game} ⭐ ${rev.rating}`;
+
+          const body = document.createElement("p");
+          body.className = "review-item-body";
+          body.textContent = rev.comment;
+
+          card.append(title, body);
+          listEl.appendChild(card);
+        });
+      }
+    }
+
+    function populateEditForm(user) {
+      document.getElementById("editFullName").value = user.fullName || "";
+      document.getElementById("editUsername").value = user.username || "";
+      document.getElementById("editAge").value = user.age || "";
+      document.getElementById("editCity").value = user.city || "";
+      document.getElementById("editTagline").value = user.tagline || "";
+      document.getElementById("editEmail").value = user.email || "";
+      document.getElementById("editPhone").value = user.phone || "";
+      document.getElementById("editAbout").value = user.about || "";
+
+      document.querySelectorAll('input[name="editGender"]').forEach((r) => {
+        r.checked = r.value === (user.gender || "Other");
+      });
+      hideAlert("editProfileAlert");
+    }
+
+    const activeUser = getActiveOrPreviewUser();
     renderProfile(activeUser);
-    showView("view-profile");
-  } else {
-    showView("view-login");
+
+    if (!getCurrentUser()) {
+      showDemoToast(
+        'Showing demo profile <strong>Player123</strong>. <a href="index.html" style="color:#93c5fd">Login</a> or <a href="signup.html" style="color:#93c5fd">Create Account</a> to sign into your own profile.'
+      );
+    }
+
+    document.getElementById("editProfileBtn").addEventListener("click", () => {
+      populateEditForm(getActiveOrPreviewUser());
+      showView("view-edit-profile");
+    });
+
+    document.getElementById("backToProfileBtn").addEventListener("click", () => {
+      renderProfile(getActiveOrPreviewUser());
+      showView("view-profile");
+    });
+
+    document.getElementById("editProfileForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const current = getActiveOrPreviewUser();
+
+      const fullName = document.getElementById("editFullName").value.trim();
+      const username = document.getElementById("editUsername").value.trim();
+      const email = document.getElementById("editEmail").value.trim();
+
+      if (!fullName || !username || !isValidEmail(email)) {
+        showAlert("editProfileAlert", "Please provide a valid full name, username, and email.");
+        return;
+      }
+
+      const users = getUsers();
+      const duplicate = users.some(
+        (u) =>
+          u.id !== current.id &&
+          (u.username.toLowerCase() === username.toLowerCase() ||
+            u.email.toLowerCase() === email.toLowerCase())
+      );
+      if (duplicate) {
+        showAlert("editProfileAlert", "That username or email is already used by another account.");
+        return;
+      }
+
+      const selectedGender =
+        document.querySelector('input[name="editGender"]:checked')?.value || "Other";
+
+      const idx = users.findIndex((u) => u.id === current.id);
+      if (idx === -1) return;
+
+      users[idx] = {
+        ...users[idx],
+        fullName,
+        username,
+        email,
+        age: document.getElementById("editAge").value.trim(),
+        gender: selectedGender,
+        city: document.getElementById("editCity").value.trim(),
+        tagline: document.getElementById("editTagline").value.trim() || "Gaming enthusiast",
+        phone: document.getElementById("editPhone").value.trim(),
+        about: document.getElementById("editAbout").value.trim()
+      };
+
+      saveUsers(users);
+      if (navAuthLink) navAuthLink.textContent = users[idx].username;
+      renderProfile(users[idx]);
+      showView("view-profile");
+      showDemoToast("Profile changes saved successfully.");
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      clearSession();
+      window.location.href = "index.html";
+    });
   }
+
+  // ==================== BOOTSTRAP CURRENT PAGE ====================
+
+  const page = document.body.dataset.page;
+  if (page === "login") initLoginPage();
+  if (page === "signup") initSignupPage();
+  if (page === "profile") initProfilePage();
 })();
