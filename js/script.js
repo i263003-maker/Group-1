@@ -1,4 +1,3 @@
-
 const loginSection = document.getElementById("login");
 const signupSection = document.getElementById("signup");
 const forgotSection = document.getElementById("forgot");
@@ -31,6 +30,17 @@ function clearMessages() {
     document.getElementById("signupMessage").textContent = "";
     document.getElementById("forgotMessage").textContent = "";
 }
+
+document.getElementById("navHome").addEventListener("click", function(event) {
+    event.preventDefault();
+    const currentUser = JSON.parse(localStorage.getItem("gamehubCurrentUser") || "null");
+    if (currentUser) {
+        document.getElementById("profileName").textContent = currentUser.username || currentUser.fullName;
+        showPage(profileSection);
+    } else {
+        showLogin();
+    }
+});
 
 document.getElementById("signupLink").addEventListener("click", function(event) {
     event.preventDefault();
@@ -143,9 +153,7 @@ document.getElementById("forgotForm").addEventListener("submit", function(event)
 
 document.getElementById("logoutButton").addEventListener("click", function() {
     localStorage.removeItem("gamehubCurrentUser");
-
     document.getElementById("loginForm").reset();
-
     showLogin();
 });
 
@@ -173,7 +181,6 @@ document.getElementById("editProfileButton").addEventListener("click", function(
 
             if (userIndex !== -1) {
                 users[userIndex] = currentUser;
-
                 localStorage.setItem("gamehubUsers", JSON.stringify(users));
             }
 
@@ -185,5 +192,14 @@ document.getElementById("editProfileButton").addEventListener("click", function(
             document.getElementById("profileName").textContent =
                 currentUser.username;
         }
+    }
+});
+
+window.addEventListener("DOMContentLoaded", function() {
+    const currentUser = JSON.parse(localStorage.getItem("gamehubCurrentUser") || "null");
+    if (currentUser) {
+        document.getElementById("profileName").textContent =
+            currentUser.username || currentUser.fullName;
+        showPage(profileSection);
     }
 });
