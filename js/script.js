@@ -1,11 +1,15 @@
+
 const loginSection = document.getElementById("login");
 const signupSection = document.getElementById("signup");
 const forgotSection = document.getElementById("forgot");
+const profileSection = document.getElementById("profile");
 
 function showPage(page) {
     loginSection.classList.remove("active");
     signupSection.classList.remove("active");
     forgotSection.classList.remove("active");
+    profileSection.classList.remove("active");
+
     page.classList.add("active");
     clearMessages();
 }
@@ -28,27 +32,27 @@ function clearMessages() {
     document.getElementById("forgotMessage").textContent = "";
 }
 
-document.getElementById("signupLink").addEventListener("click", function (event) {
+document.getElementById("signupLink").addEventListener("click", function(event) {
     event.preventDefault();
     showSignup();
 });
 
-document.getElementById("loginLink").addEventListener("click", function (event) {
+document.getElementById("loginLink").addEventListener("click", function(event) {
     event.preventDefault();
     showLogin();
 });
 
-document.getElementById("forgotLink").addEventListener("click", function (event) {
+document.getElementById("forgotLink").addEventListener("click", function(event) {
     event.preventDefault();
     showForgotPassword();
 });
 
-document.getElementById("backToLogin").addEventListener("click", function (event) {
+document.getElementById("backToLogin").addEventListener("click", function(event) {
     event.preventDefault();
     showLogin();
 });
 
-document.getElementById("signupForm").addEventListener("submit", function (event) {
+document.getElementById("signupForm").addEventListener("submit", function(event) {
     event.preventDefault();
 
     const fullName = document.getElementById("fullName").value.trim();
@@ -64,7 +68,7 @@ document.getElementById("signupForm").addEventListener("submit", function (event
 
     const users = JSON.parse(localStorage.getItem("gamehubUsers") || "[]");
 
-    const alreadyExists = users.some(function (user) {
+    const alreadyExists = users.some(function(user) {
         return user.email.toLowerCase() === email.toLowerCase()
             || user.username.toLowerCase() === username.toLowerCase();
     });
@@ -83,39 +87,48 @@ document.getElementById("signupForm").addEventListener("submit", function (event
 
     localStorage.setItem("gamehubUsers", JSON.stringify(users));
 
-    document.getElementById("signupMessage").textContent = "Account created successfully. You can now login.";
+    document.getElementById("signupMessage").textContent =
+        "Account created successfully. You can now login.";
+
     document.getElementById("signupForm").reset();
 });
 
-document.getElementById("loginForm").addEventListener("submit", function (event) {
+document.getElementById("loginForm").addEventListener("submit", function(event) {
     event.preventDefault();
 
     const loginValue = document.getElementById("loginEmail").value.trim().toLowerCase();
     const password = document.getElementById("loginPassword").value;
+
     const users = JSON.parse(localStorage.getItem("gamehubUsers") || "[]");
 
-    const user = users.find(function (account) {
-        return (account.email.toLowerCase() === loginValue
-            || account.username.toLowerCase() === loginValue)
-            && account.password === password;
+    const user = users.find(function(account) {
+        return (
+            account.email.toLowerCase() === loginValue ||
+            account.username.toLowerCase() === loginValue
+        ) && account.password === password;
     });
 
     if (user) {
-        document.getElementById("loginMessage").textContent =
-            "Welcome to GameHub, " + user.fullName + "!";
+        localStorage.setItem("gamehubCurrentUser", JSON.stringify(user));
+
+        document.getElementById("profileName").textContent =
+            user.username || user.fullName;
+
+        showPage(profileSection);
     } else {
         document.getElementById("loginMessage").textContent =
             "Incorrect email/username or password. Please try again.";
     }
 });
 
-document.getElementById("forgotForm").addEventListener("submit", function (event) {
+document.getElementById("forgotForm").addEventListener("submit", function(event) {
     event.preventDefault();
 
     const email = document.getElementById("forgotEmail").value.trim().toLowerCase();
+
     const users = JSON.parse(localStorage.getItem("gamehubUsers") || "[]");
 
-    const userExists = users.some(function (user) {
+    const userExists = users.some(function(user) {
         return user.email.toLowerCase() === email;
     });
 
@@ -125,5 +138,52 @@ document.getElementById("forgotForm").addEventListener("submit", function (event
     } else {
         document.getElementById("forgotMessage").textContent =
             "No account was found with this email address.";
+    }
+});
+
+document.getElementById("logoutButton").addEventListener("click", function() {
+    localStorage.removeItem("gamehubCurrentUser");
+
+    document.getElementById("loginForm").reset();
+
+    showLogin();
+});
+
+document.getElementById("editProfileButton").addEventListener("click", function() {
+    const currentUser = JSON.parse(
+        localStorage.getItem("gamehubCurrentUser") || "null"
+    );
+
+    if (currentUser) {
+        const newName = prompt(
+            "Enter your display name:",
+            currentUser.username || currentUser.fullName
+        );
+
+        if (newName && newName.trim() !== "") {
+            currentUser.username = newName.trim();
+
+            const users = JSON.parse(
+                localStorage.getItem("gamehubUsers") || "[]"
+            );
+
+            const userIndex = users.findIndex(function(user) {
+                return user.email.toLowerCase() === currentUser.email.toLowerCase();
+            });
+
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+
+                localStorage.setItem("gamehubUsers", JSON.stringify(users));
+            }
+
+            localStorage.setItem(
+                "gamehubCurrentUser",
+                JSON.stringify(currentUser)
+            );
+
+            document.getElementById("profileName").textContent =
+                currentUser.username;
+        }
     }
 });
