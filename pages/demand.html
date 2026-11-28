@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base href="../">
+  <title>Demand More Games — Rating Hub</title>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/chrome.css"><link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="demand">
+  <div id="site-header-mount"></div><div id="utility-strip-mount"></div>
+  <main class="container page-main">
+    <header class="page-heading"><p class="eyebrow">// Your suggestions shape the index</p><h1>Demand more games</h1><p>Tell us what you want to see in Rating Hub. Requests are saved in this browser and associated with your account when signed in.</p></header>
+    <section class="panel" style="max-width:760px">
+      <form class="stack" id="request-form">
+        <label class="field">Game title<input id="request-title" name="title" required maxlength="100" placeholder="e.g. Hades II"></label>
+        <label class="field">Platform <input id="request-platform" name="platform" maxlength="80" placeholder="PC, PlayStation, Xbox..."></label>
+        <label class="field">Why should we add it?<textarea id="request-reason" name="reason" minlength="12" maxlength="600" required placeholder="What makes this game worth reviewing?"></textarea></label>
+        <div class="actions-row"><button class="button" type="submit">Submit request →</button><span class="muted" id="request-message" aria-live="polite"></span></div>
+      </form>
+    </section>
+    <section class="section"><div class="section-head"><div><p class="eyebrow">// Your contribution</p><h2>Recent requests</h2></div></div><div class="request-list" id="request-list"></div></section>
+  </main>
+  <div id="site-footer-mount"></div><div id="modal-root"></div>
+  <script src="credentials/users-db.js"></script><script src="js/games-data.js"></script><script src="js/state.js"></script><script src="js/search.js"></script><script src="js/chrome.js"></script><script src="js/auth.js"></script><script src="js/game-page.js"></script><script src="js/compare.js"></script><script src="js/developers.js"></script><script src="js/app.js"></script>
+</body>
+</html>

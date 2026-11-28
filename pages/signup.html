@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base href="../">
+  <title>Create Account — Rating Hub</title>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/chrome.css"><link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="signup">
+  <div id="site-header-mount"></div><div id="utility-strip-mount"></div>
+  <main class="container page-main">
+    <section class="auth-page">
+      <div class="panel"><p class="eyebrow">// Join the community</p><h1>Create account</h1><p class="muted">Your profile makes it easy to keep your wishlist, reviews, and game requests together.</p>
+        <form class="auth-form" id="signup-form" novalidate>
+          <label class="field">Full name<input id="signup-name" required minlength="2" autocomplete="name"></label>
+          <label class="field">Username<input id="signup-username" required minlength="3" maxlength="24" autocomplete="username"></label>
+          <label class="field">Email<input id="signup-email" type="email" required autocomplete="email"></label>
+          <label class="field">Password<input id="signup-password" type="password" required minlength="6" autocomplete="new-password"></label>
+          <label class="field">Confirm password<input id="signup-confirm" type="password" required minlength="6" autocomplete="new-password"></label>
+          <div class="notice" id="signup-message" aria-live="polite" hidden></div>
+          <button class="button" type="submit">Create account →</button>
+        </form>
+        <p class="auth-footer">Already have an account? <a href="pages/login.html">Log in</a></p>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer-mount"></div><div id="modal-root"></div>
+  <script src="credentials/users-db.js"></script><script src="js/games-data.js"></script><script src="js/state.js"></script><script src="js/search.js"></script><script src="js/chrome.js"></script><script src="js/auth.js"></script><script src="js/game-page.js"></script><script src="js/compare.js"></script><script src="js/developers.js"></script><script src="js/app.js"></script>
+</body>
+</html>

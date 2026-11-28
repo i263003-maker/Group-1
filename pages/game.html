@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base href="../">
+  <title>Game Details — Rating Hub</title>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/chrome.css"><link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="game">
+  <div id="site-header-mount"></div><div id="utility-strip-mount"></div>
+  <main class="container page-main">
+    <div id="game-not-found" class="empty-state" hidden><h2>Game not found</h2><p>That title isn't in the unified catalog.</p><a class="button" href="pages/search.html">Search games</a></div>
+    <div id="game-content" hidden>
+      <section class="detail-hero">
+        <img id="game-banner" alt="">
+        <div class="detail-hero-copy">
+          <p class="eyebrow" id="game-kicker">// Game review</p>
+          <h1 id="game-title"></h1>
+          <p id="game-tagline"></p>
+          <div class="actions-row"><button class="button" id="wishlist-toggle" type="button">♡ Add to wishlist</button><a class="button-secondary" id="compare-game" href="pages/compare.html">⇄ Compare games</a></div>
+        </div>
+      </section>
+      <div class="detail-content">
+        <div class="detail-main">
+          <section class="panel"><div class="section-head"><div><p class="eyebrow">// The essentials</p><h2>Game overview</h2></div></div><p class="muted" id="game-summary"></p><div class="meta-grid" id="game-meta"></div></section>
+          <section class="panel">
+            <div class="review-toolbar"><div><p class="eyebrow">// Players have their say</p><h2>Community reviews <span class="muted" id="review-count"></span></h2></div>
+              <div class="row"><label class="sr-only" for="review-filter">Filter reviews</label><select class="control" id="review-filter"><option value="all">All reviews</option><option value="positive">Positive · 7+</option><option value="mixed">Mixed · 5–6.9</option><option value="critical">Critical · under 5</option></select><label class="sr-only" for="review-sort">Sort reviews</label><select class="control" id="review-sort"><option value="recent">Most recent</option><option value="helpful">Most helpful</option><option value="high">Highest rated</option><option value="low">Lowest rated</option></select></div>
+            </div>
+            <div class="score-overview"><div class="score-badge" id="community-score">—</div><div><h3 id="community-verdict">Community score</h3><p id="community-caption">Based on seeded and community reviews.</p></div></div>
+            <div class="rating-breakdown" id="rating-breakdown"></div>
+          </section>
+          <section class="panel">
+            <div class="section-head"><div><p class="eyebrow">// Leave it better</p><h2>Write a review</h2></div></div>
+            <form class="review-composer" id="review-form">
+              <div class="review-composer-grid">
+                <label class="field">Your rating <span class="row"><input id="review-score" type="range" min="1" max="10" step=".5" value="8.5"><strong class="accent" id="review-score-value">8.5 / 10</strong></span></label>
+                <label class="field">Platform<select id="review-platform"></select></label>
+              </div>
+              <label class="field">Headline<input id="review-headline" required maxlength="90" placeholder="What stands out?"></label>
+              <label class="field">Your review<textarea id="review-body" required minlength="20" maxlength="1200" placeholder="Share what you liked, what could be better, and who this game is for."></textarea></label>
+              <div class="actions-row"><button class="button" type="submit">Publish review →</button><span class="muted" id="review-message" aria-live="polite"></span></div>
+            </form>
+          </section>
+          <div class="review-list" id="review-list"></div>
+        </div>
+        <aside class="detail-aside">
+          <section class="panel"><h2>At a glance</h2><div class="score-overview"><div class="score-badge" id="editor-score">—</div><div><h3>Hub rating</h3><p>Curated catalog score</p></div></div></section>
+          <section class="panel"><h2>Pros &amp; cons</h2><h3 class="accent">What players love</h3><ul id="game-pros" class="muted"></ul><h3 class="accent">Worth knowing</h3><ul id="game-cons" class="muted"></ul></section>
+          <section class="panel"><h2>More like this</h2><div class="related-list" id="related-games"></div></section>
+        </aside>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer-mount"></div><div id="modal-root"></div>
+  <script src="credentials/users-db.js"></script><script src="js/games-data.js"></script><script src="js/state.js"></script><script src="js/search.js"></script><script src="js/chrome.js"></script><script src="js/auth.js"></script><script src="js/game-page.js"></script><script src="js/compare.js"></script><script src="js/developers.js"></script><script src="js/app.js"></script>
+</body>
+</html>
