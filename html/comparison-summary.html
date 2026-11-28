@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gamehub — Comparison Summary</title>
+  <link rel="stylesheet" href="../css/comparison-summary.css" />
+</head>
+<body>
+  <div class="outer-frame">
+    <div class="hub-shell">
+      <!-- Top Navigation Bar -->
+      <header class="hub-header">
+        <a href="../index.html" class="brand" aria-label="Gamehub Home">
+          <span class="brand-dots" aria-hidden="true">•••</span>
+          <span class="brand-name">Gamehub</span>
+        </a>
+
+        <button
+          type="button"
+          class="menu-toggle"
+          id="menuToggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="mainNav"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
+          <a href="../index.html" class="nav-link">Home</a>
+          <span class="nav-sep" aria-hidden="true">|</span>
+          <a href="review.html" class="nav-link">Review</a>
+          <span class="nav-sep" aria-hidden="true">|</span>
+          <a href="compare.html" class="nav-link active">Compare</a>
+        </nav>
+      </header>
+
+      <main class="page-content">
+        <!-- Page Title -->
+        <section class="hero-section">
+          <div class="title-row">
+            <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+              <path d="M4 22h16" />
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+            </svg>
+            <h1>Comparison Summary</h1>
+          </div>
+          <div class="api-notice" id="apiNotice" hidden>
+            Demo mode active — add your <code>RAWG_API_KEY</code> in <code>js/comparison-summary.js</code> for live API data.
+          </div>
+        </section>
+
+        <!-- Vertical Prototype Stage: Calculating Winner -->
+        <section class="calculating-card" id="calculatingCard" aria-live="polite">
+          <svg class="trophy-hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+          </svg>
+
+          <p class="calc-label" id="calcStatus">Calculating Winner...</p>
+
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+
+          <div class="calc-reveal" id="calcReveal" hidden>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <div class="wins-banner">
+              <p class="wins-game-name" id="bannerWinnerName">Dead Space (Remake)</p>
+              <p class="wins-callout" id="bannerWinsCallout">☆ Wins! ☆</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <button type="button" class="primary-btn" id="viewSummaryBtn">View Summary</button>
+          </div>
+        </section>
+
+        <!-- Horizontal Prototype Stage: Final Comparison Summary -->
+        <section class="summary-section" id="summarySection" hidden>
+          <div class="summary-grid">
+            <!-- Left Column: Winner Cover + Action Buttons -->
+            <div class="summary-left">
+              <div class="winner-cover-box" id="winnerCoverBox"></div>
+              <div class="summary-actions">
+                <a href="compare.html" class="primary-btn full-btn">COMPARE AGAIN</a>
+                <a href="../index.html" class="secondary-btn full-btn">BACK TO HOME</a>
+              </div>
+            </div>
+
+            <!-- Right Column: Winner By Rating Card -->
+            <div class="winner-info-card">
+              <h2 class="winner-heading" id="winnerHeading">Winner By Rating</h2>
+              <p class="winner-title" id="summaryWinnerTitle">Dead Space (Remake)</p>
+              <p class="winner-score" id="summaryWinnerScore">9.0 / 10</p>
+              <p class="winner-tagline" id="summaryWinnerTagline">Highest-rated game!</p>
+              <p class="winner-margin" id="summaryWinnerMargin"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="error-card" id="errorCard" hidden>
+          <h2>Could Not Calculate Winner</h2>
+          <p id="errorMessage">Unable to load the compared games.</p>
+          <a href="compare.html" class="primary-btn">Compare Again</a>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/comparison-summary.js"></script>
+</body>
+</html>

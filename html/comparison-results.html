@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gamehub — Game Comparison Results</title>
+  <link rel="stylesheet" href="../css/comparison-results.css" />
+</head>
+<body>
+  <div class="outer-frame">
+    <div class="hub-shell">
+      <!-- Top Navigation Bar -->
+      <header class="hub-header">
+        <a href="../index.html" class="brand" aria-label="Gamehub Home">
+          <span class="brand-dots" aria-hidden="true">•••</span>
+          <span class="brand-name">Gamehub</span>
+        </a>
+
+        <button
+          type="button"
+          class="menu-toggle"
+          id="menuToggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="mainNav"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
+          <a href="../index.html" class="nav-link">Home</a>
+          <span class="nav-sep" aria-hidden="true">|</span>
+          <a href="review.html" class="nav-link">Review</a>
+          <span class="nav-sep" aria-hidden="true">|</span>
+          <a href="compare.html" class="nav-link active">Compare</a>
+        </nav>
+      </header>
+
+      <main class="page-content">
+        <!-- Page Title -->
+        <section class="hero-section">
+          <div class="title-row">
+            <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="6" y1="12" x2="10" y2="12" />
+              <line x1="8" y1="10" x2="8" y2="14" />
+              <circle cx="15" cy="13" r="0.8" fill="currentColor" />
+              <circle cx="17.5" cy="10.8" r="0.8" fill="currentColor" />
+              <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" />
+            </svg>
+            <h1>Game Comparison Results</h1>
+          </div>
+          <div class="api-notice" id="apiNotice" hidden>
+            Demo mode active — add your <code>RAWG_API_KEY</code> in <code>js/comparison-results.js</code> for live API data.
+          </div>
+        </section>
+
+        <!-- Vertical Prototype Processing Flow -->
+        <section class="processing-card" id="processingCard" aria-live="polite">
+          <div class="process-step active" id="stepFetching">
+            <svg class="process-icon spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            <p>Fetching Game Data...</p>
+          </div>
+
+          <div class="flow-arrow" aria-hidden="true">↓</div>
+
+          <div class="process-step" id="stepComparing">
+            <svg class="process-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="3" x2="12" y2="20" />
+              <line x1="6" y1="20" x2="18" y2="20" />
+              <line x1="4" y1="7" x2="20" y2="7" />
+              <path d="M4 7l-2 6h4l-2-6z" />
+              <path d="M20 7l-2 6h4l-2-6z" />
+            </svg>
+            <p>Comparing Ratings and Platforms...</p>
+          </div>
+
+          <div class="flow-arrow" aria-hidden="true">↓</div>
+
+          <div class="complete-pill" id="stepComplete">
+            <span class="check-circle">✓</span>
+            <span>Comparison Complete!</span>
+          </div>
+        </section>
+
+        <!-- Horizontal Prototype Results View -->
+        <section class="results-section" id="resultsSection" hidden>
+          <div class="results-layout">
+            <!-- Left Side: Game 1 VS Game 2 -->
+            <div class="vs-showcase">
+              <article class="game-card" id="game1Card">
+                <div class="cover-frame" id="game1Cover"></div>
+                <h2 class="game-title" id="game1Title">Loading...</h2>
+              </article>
+
+              <div class="vs-badge" aria-label="versus">VS</div>
+
+              <article class="game-card" id="game2Card">
+                <div class="cover-frame" id="game2Cover"></div>
+                <h2 class="game-title" id="game2Title">Loading...</h2>
+              </article>
+            </div>
+
+            <!-- Right Side: Features Table -->
+            <div class="features-card">
+              <div class="features-header">
+                <h2>Features</h2>
+              </div>
+              <div class="table-wrap">
+                <table class="features-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Feature</th>
+                      <th scope="col" id="thGame1">Game 1</th>
+                      <th scope="col" id="thGame2">Game 2</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">Rating</th>
+                      <td id="cellRating1">—</td>
+                      <td id="cellRating2">—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Platform</th>
+                      <td id="cellPlatform1">—</td>
+                      <td id="cellPlatform2">—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Genre</th>
+                      <td id="cellGenre1">—</td>
+                      <td id="cellGenre2">—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Release Date</th>
+                      <td id="cellRelease1">—</td>
+                      <td id="cellRelease2">—</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Bar with Calculate Winner Button -->
+          <div class="bottom-actions">
+            <a href="compare.html" class="secondary-btn">Change Games</a>
+            <button type="button" class="primary-btn" id="calculateWinnerBtn">
+              Calculate Winner
+            </button>
+          </div>
+        </section>
+
+        <section class="error-card" id="errorCard" hidden>
+          <h2>Could Not Load Comparison</h2>
+          <p id="errorMessage">Please verify your RAWG API key or return to the selection page.</p>
+          <a href="compare.html" class="primary-btn">Back to Compare</a>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/comparison-results.js"></script>
+</body>
+</html>

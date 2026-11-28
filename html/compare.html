@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gamehub — Compare Two Games</title>
+  <link rel="stylesheet" href="../css/compare.css" />
+</head>
+<body>
+  <div class="outer-frame">
+    <div class="hub-shell">
+      <!-- Top Navigation Bar -->
+      <header class="hub-header">
+        <a href="../index.html" class="brand" aria-label="Gamehub Home">
+          <span class="brand-dots" aria-hidden="true">•••</span>
+          <span class="brand-name">Gamehub</span>
+        </a>
+
+        <button
+          type="button"
+          class="menu-toggle"
+          id="menuToggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="mainNav"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
+          <a href="../index.html" class="nav-link">Home</a>
+          <span class="nav-sep" aria-hidden="true">|</span>
+          <a href="review.html" class="nav-link">Review</a>
+          <span class="nav-sep" aria-hidden="true">|</span>
+          <a href="compare.html" class="nav-link active" aria-current="page">Compare</a>
+        </nav>
+      </header>
+
+      <main class="page-content">
+        <!-- Page Title -->
+        <section class="hero-section">
+          <div class="title-row">
+            <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="6" y1="12" x2="10" y2="12" />
+              <line x1="8" y1="10" x2="8" y2="14" />
+              <circle cx="15" cy="13" r="0.8" fill="currentColor" />
+              <circle cx="17.5" cy="10.8" r="0.8" fill="currentColor" />
+              <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" />
+            </svg>
+            <h1>Compare Two Games</h1>
+          </div>
+          <p class="subtitle">Select two games to Compare:</p>
+          <div class="api-notice" id="apiNotice" hidden>
+            Demo mode active — add your <code>RAWG_API_KEY</code> in <code>js/compare.js</code> to search all live games.
+          </div>
+        </section>
+
+        <!-- Side-by-Side Game Selection Cards -->
+        <section class="selection-grid" aria-label="Game selection">
+          <!-- Game 1 Card -->
+          <div class="select-card" id="cardGame1">
+            <div class="card-header">
+              <span class="step-badge">1</span>
+              <h2>Select Game 1</h2>
+            </div>
+
+            <div class="search-wrapper">
+              <label for="searchGame1" class="sr-only">Search Game 1</label>
+              <div class="input-box">
+                <input
+                  type="text"
+                  id="searchGame1"
+                  class="game-search-input"
+                  placeholder="Search a game (e.g. Dead Space)..."
+                  autocomplete="off"
+                />
+                <button type="button" class="clear-btn" id="clearGame1" aria-label="Clear Game 1" hidden>&times;</button>
+              </div>
+              <ul class="suggestions-list" id="suggestions1" role="listbox" aria-label="Game 1 search results" hidden></ul>
+            </div>
+
+            <div class="selected-preview empty" id="previewGame1">
+              <p class="preview-placeholder">No game selected yet. Start typing to search.</p>
+            </div>
+          </div>
+
+          <!-- Game 2 Card -->
+          <div class="select-card" id="cardGame2">
+            <div class="card-header">
+              <span class="step-badge">2</span>
+              <h2>Select Game 2</h2>
+            </div>
+
+            <div class="search-wrapper">
+              <label for="searchGame2" class="sr-only">Search Game 2</label>
+              <div class="input-box">
+                <input
+                  type="text"
+                  id="searchGame2"
+                  class="game-search-input"
+                  placeholder="Search a game (e.g. Callisto Protocol)..."
+                  autocomplete="off"
+                />
+                <button type="button" class="clear-btn" id="clearGame2" aria-label="Clear Game 2" hidden>&times;</button>
+              </div>
+              <ul class="suggestions-list" id="suggestions2" role="listbox" aria-label="Game 2 search results" hidden></ul>
+            </div>
+
+            <div class="selected-preview empty" id="previewGame2">
+              <p class="preview-placeholder">No game selected yet. Start typing to search.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Vertical Prototype Validation Step + Action -->
+        <section class="validation-panel" aria-live="polite">
+          <div class="validation-step-label">
+            <span class="step-badge">3</span>
+            <span>Validate Selection</span>
+          </div>
+
+          <div class="status-pill pending" id="validationPill">
+            <span class="status-icon" id="statusIcon">•</span>
+            <span id="statusText">Choose two games above to enable comparison.</span>
+          </div>
+
+          <button type="button" class="primary-btn" id="compareBtn" disabled>
+            Compare Games
+          </button>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/compare.js"></script>
+</body>
+</html>
