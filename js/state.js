@@ -164,6 +164,8 @@
       platform: String(input.platform || "PC"),
       headline: String(input.headline || "").trim(),
       body: String(input.body || "").trim(),
+      pros: normalizePoints(input.pros),
+      cons: normalizePoints(input.cons),
       createdAt: new Date().toISOString(),
       helpfulBy: [],
       comments: []
@@ -172,6 +174,11 @@
     return write(keys.reviews, all)
       ? { ok: true, review: reviews[0] }
       : { ok: false, message: "Your review could not be saved in this browser." };
+  }
+
+  function normalizePoints(value) {
+    const points = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
+    return points.map((point) => String(point).trim()).filter(Boolean).slice(0, 5);
   }
 
   function toggleHelpful(gameId, reviewId) {

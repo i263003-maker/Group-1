@@ -22,7 +22,12 @@
         return;
       }
       showMessage(document.getElementById("login-message"), "Signed in. Taking you to the hub…", "success");
-      window.setTimeout(() => { window.location.href = new URL("pages/home.html", document.baseURI).href; }, 250);
+      const requestedPath = new URLSearchParams(window.location.search).get("next") || "";
+      const requestedUrl = requestedPath.startsWith("pages/") ? new URL(requestedPath, document.baseURI) : null;
+      const destination = requestedUrl && requestedUrl.origin === window.location.origin
+        ? requestedUrl
+        : new URL("pages/home.html", document.baseURI);
+      window.setTimeout(() => { window.location.href = destination.href; }, 250);
     });
 
     const signup = document.getElementById("signup-form");

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base href="../">
+  <meta name="description" content="Browse player reviews from the Rating Hub game catalog.">
+  <title>Community Reviews — Rating Hub</title>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/chrome.css"><link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="reviews">
+  <div id="site-header-mount"></div><div id="utility-strip-mount"></div>
+  <main class="container page-main">
+    <header class="page-heading"><p class="eyebrow">// Player perspectives</p><h1>Community reviews</h1><p>Browse first-hand takes across the full catalog. Filter by rating, search a game or reviewer, and open a review thread to join the conversation.</p></header>
+    <section class="community-toolbar panel">
+      <label class="field">Search reviews<input class="control" id="reviews-search" type="search" placeholder="Game title, reviewer, or review text"></label>
+      <label class="field">Rating<select class="control" id="reviews-rating"><option value="all">Any score</option><option value="positive">Positive · 7+</option><option value="mixed">Mixed · 5–6.9</option><option value="critical">Critical · under 5</option></select></label>
+      <label class="field">Sort<select class="control" id="reviews-sort"><option value="recent">Newest first</option><option value="helpful">Most helpful</option><option value="high">Highest rated</option><option value="low">Lowest rated</option></select></label>
+    </section>
+    <p class="result-summary"><span id="reviews-count">Loading community reviews…</span><a class="button-quiet" href="pages/search.html">Explore all games →</a></p>
+    <section class="review-list" id="community-review-feed"></section>
+  </main>
+  <div id="site-footer-mount"></div><div id="modal-root"></div>
+  <script src="credentials/users-db.js"></script><script src="js/games-data.js"></script><script src="js/state.js"></script><script src="js/search.js"></script><script src="js/chrome.js"></script><script src="js/auth.js"></script><script src="js/game-page.js"></script><script src="js/compare.js"></script><script src="js/developers.js"></script><script src="js/app.js"></script>
+</body>
+</html>

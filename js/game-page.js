@@ -40,6 +40,8 @@
     document.getElementById("game-cons").innerHTML = cons.length ? cons.map((text) => `<li>${esc(text)}</li>`).join("") : `<li>Check platform availability and current store details before purchasing.</li>`;
     const compare = document.getElementById("compare-game");
     compare.href = `pages/compare.html?gameA=${encodeURIComponent(game.id)}`;
+    document.getElementById("all-reviews-link").href = `pages/reviews.html?id=${encodeURIComponent(game.id)}`;
+    document.getElementById("write-review-link").href = `pages/write-review.html?id=${encodeURIComponent(game.id)}`;
     const wishlistButton = document.getElementById("wishlist-toggle");
     const updateWishlistButton = () => {
       const saved = state.getWishlist().includes(String(game.id));
@@ -62,7 +64,10 @@
     document.getElementById("review-form").addEventListener("submit", (event) => {
       event.preventDefault();
       const message = document.getElementById("review-message");
-      if (!state.getCurrentUser()) { window.location.href = "pages/login.html"; return; }
+      if (!state.getCurrentUser()) {
+        window.location.href = `pages/login.html?next=${encodeURIComponent(`pages/game.html?id=${game.id}#community-reviews`)}`;
+        return;
+      }
       const result = state.addReview(game.id, {
         score: slider.value,
         platform: platform.value,
@@ -147,5 +152,67 @@
   function getHelpfulCount(gameId, review) {
     return Number(review.helpful || 0) + state.getHelpful(gameId, review.id).count;
   }
-  window.RatingHubGamePage = { renderGame };
+
+  function renderDedicatedComposer() {
+    const id = new URLSearchParams(location.search).get("id");
+    const game = byId(id);
+    const content = document.getElementById("write-review-content");
+    const missing = document.getElementById("write-review-missing");
+    if (!content || !missing) return;
+    if (!game) { missing.hidden = false; return; }
+    content.hidden = false;
+    document.title = `Write a review for ${game.title} — Rating Hub`;
+    const cover = document.getElementById("write-review-cover");
+    cover.src = game.cover || "";
+    cover.alt = `${game.title} cover`;
+    cover.onerror = () => { cover.style.display = "none"; };
+    document.getElementById("write-review-title").textContent = game.title;
+    document.getElementById("write-review-meta").textContent = `// ${game.year || "Year TBA"} · ${(game.genres || []).slice(0, 3).join(" / ")}`;
+    document.getElementById("write-review-intro").textContent = `Tell other players what makes ${game.title} worth their time.`;
+    const gameUrl = `pages/game.html?id=${encodeURIComponent(game.id)}`;
+    document.getElementById("write-review-back").href = gameUrl;
+    document.getElementById("write-review-cancel").href = gameUrl;
+    document.getElementById("write-review-platform").innerHTML = (game.platforms?.length ? game.platforms : ["PC"]).map((platform) => `<option>${esc(platform)}</option>`).join("");
+    const form = document.getElementById("write-review-form");
+    const authMessage = document.getElementById("write-review-auth-message");
+    const ownReview = state.getReviews(game.id).find((review) => review.userId === state.getCurrentUser()?.id);
+    if (!state.getCurrentUser()) {
+      const next = `pages/write-review.html?id=${encodeURIComponent(game.id)}`;
+      authMessage.hidden = false;
+      authMessage.innerHTML = `Sign in before publishing. <a href="pages/login.html?next=${encodeURIComponent(next)}">Log in and return to this form →</a>`;
+      form.querySelectorAll("input, textarea, select, button").forEach((control) => { control.disabled = true; });
+      return;
+    }
+    if (ownReview) {
+      authMessage.hidden = false;
+      authMessage.textContent = "You have already reviewed this game from this account. You can update or discuss your review on the game page.";
+      form.querySelectorAll("input, textarea, select, button").forEach((control) => { control.disabled = true; });
+      return;
+    }
+    const score = document.getElementById("write-review-score");
+    score.addEventListener("input", () => { document.getElementById("write-review-score-value").textContent = `${Number(score.value).toFixed(1)} / 10`; });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const result = state.addReview(game.id, {
+        score: score.value,
+        platform: document.getElementById("write-review-platform").value,
+        headline: document.getElementById("write-review-headline").value,
+        body: document.getElementById("write-review-body").value,
+        pros: document.getElementById("write-review-pros").value,
+        cons: document.getElementById("write-review-cons").value
+      });
+      const message = document.getElementById("write-review-message");
+      message.hidden = false;
+      message.textContent = result.message || (result.ok ? "Your review is published." : "Your review could not be published.");
+      message.classList.toggle("is-success", result.ok);
+      if (result.ok) {
+        form.reset();
+        form.querySelectorAll("input, textarea, select, button").forEach((control) => { control.disabled = true; });
+        authMessage.hidden = false;
+        authMessage.textContent = "Your review is now part of the community. Thank you for sharing your experience.";
+      }
+    });
+  }
+
+  window.RatingHubGamePage = { renderGame, renderDedicatedComposer };
 })();

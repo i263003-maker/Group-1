@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base href="../">
+  <meta name="description" content="Follow Rating Hub game updates and your search-rank rewards.">
+  <title>Activity &amp; Rewards — Rating Hub</title>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/chrome.css"><link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="activity">
+  <div id="site-header-mount"></div><div id="utility-strip-mount"></div>
+  <main class="container page-main">
+    <header class="page-heading"><p class="eyebrow">// The hub is always moving</p><h1>Activity &amp; rewards</h1><p>Catch up on newly indexed titles and community feedback, and track your search-rank progress.</p></header>
+    <section class="activity-reward panel">
+      <div><p class="eyebrow">// Your search rank</p><h2 id="activity-rank">Level 1 · New Scout</h2><p class="muted" id="activity-points">Sign in to earn rank points as you search the catalog.</p><div class="modal-progress"><span id="activity-progress"></span></div><p class="muted" id="activity-next"></p></div>
+      <div class="activity-reward-actions"><button class="button" type="button" id="activity-redeem-open">View rank badge</button><a class="button-secondary" id="activity-login-link" href="pages/login.html">Log in to save progress</a></div>
+    </section>
+    <section class="section">
+      <div class="section-head"><div><p class="eyebrow">// Recently updated</p><h2>Community activity</h2></div><button class="button-quiet" id="activity-refresh" type="button">Refresh updates</button></div>
+      <div class="activity-feed" id="activity-updates"></div>
+    </section>
+  </main>
+  <div id="site-footer-mount"></div><div id="modal-root"></div>
+  <script src="credentials/users-db.js"></script><script src="js/games-data.js"></script><script src="js/state.js"></script><script src="js/search.js"></script><script src="js/chrome.js"></script><script src="js/auth.js"></script><script src="js/game-page.js"></script><script src="js/compare.js"></script><script src="js/developers.js"></script><script src="js/app.js"></script>
+</body>
+</html>
