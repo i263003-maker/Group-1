@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rating Hub</title>
+    <link rel="stylesheet" href="styling.css">
+    <script src="scripting.js" defer></script>
+</head>
+<body>
+
+<!-- WELCOME PAGE -->
+<section id="landingPage">
+
+    <header class="header">
+        <img src="images/logo.png" class="logo" alt="Rating Hub">
+
+        <button class="menu-btn" onclick="openMenu()">⋯</button>
+    </header>
+
+    <div class="landing-content">
+        <p class="orange-text">// RATING HUB // YOUR GAMING ARENA</p>
+
+        <h1>YOUR NEXT <span>GAME</span><br>OBSESSION</h1>
+
+        <p>PLAY MORE. CHOOSE BETTER.</p>
+
+        <button class="primary-btn" onclick="showHome()">
+            HOME PAGE →
+        </button>
+    </div>
+
+</section>
+
+
+<!-- ACTUAL HOME PAGE -->
+<section id="homePage" class="hidden">
+
+    <header class="header">
+        <img src="images/logo.png" class="logo" alt="Rating Hub">
+
+        <button class="menu-btn" onclick="openMenu()">⋯</button>
+    </header>
+
+    <main class="container">
+
+        <section class="welcome">
+            <p class="orange-text">// WELCOME TO RATING HUB</p>
+            <h1>Find Your Next <span>Favourite.</span></h1>
+            <p>Discover games, explore ratings and choose your next adventure.</p>
+        </section>
+
+
+        <!-- TOP RATED GAMES -->
+        <section class="section" id="topRated">
+
+            <div class="section-heading">
+                <div>
+                    <p class="orange-text">// COMMUNITY FAVOURITES</p>
+                    <h2>TOP RATED <span>GAMES</span></h2>
+                </div>
+
+                <button class="view-btn" onclick="showAllGames()">
+                    VIEW ALL →
+                </button>
+            </div>
+
+            <div id="topRatedGames" class="game-grid"></div>
+
+        </section>
+
+
+        <!-- ALL GAMES -->
+        <section class="section" id="allGames">
+
+            <div class="section-heading">
+                <div>
+                    <p class="orange-text">// EXPLORE THE COLLECTION</p>
+                    <h2>FEATURED <span>GAMES</span></h2>
+                </div>
+
+                <input
+                    type="search"
+                    id="searchInput"
+                    placeholder="Search games..."
+                >
+            </div>
+
+            <div id="gameList" class="game-grid"></div>
+
+            <p id="noResults" class="hidden">No games found.</p>
+
+        </section>
+
+
+        <!-- WISHLIST -->
+        <section class="section" id="wishlist">
+
+            <p class="orange-text">// SAVED FOR LATER</p>
+            <h2>MY <span>WISHLIST</span></h2>
+
+            <div id="wishlistGames">
+                <p>Your wishlist is empty.</p>
+            </div>
+
+        </section>
+
+
+        <!-- REQUEST GAMES -->
+        <section class="section request-section" id="requests">
+
+            <p class="orange-text">// YOUR SUGGESTIONS</p>
+            <h2>DEMAND MORE <span>GAMES</span></h2>
+
+            <p>Can't find your favourite game? Request it here!</p>
+
+            <form id="requestForm">
+
+                <input
+                    type="text"
+                    id="requestName"
+                    placeholder="Enter game name"
+                    required
+                >
+
+                <input
+                    type="text"
+                    id="requestPlatform"
+                    placeholder="Platform (optional)"
+                >
+
+                <textarea
+                    id="requestReason"
+                    placeholder="Why should we add this game?"
+                ></textarea>
+
+                <button class="primary-btn" type="submit">
+                    SUBMIT REQUEST →
+                </button>
+
+            </form>
+
+            <p id="requestMessage"></p>
+
+        </section>
+
+    </main>
+
+    <footer>
+        RATING HUB · PLAY MORE. CHOOSE BETTER.
+    </footer>
+
+</section>
+
+
+<!-- THREE DOT MENU -->
+<div id="menuOverlay" onclick="closeMenu()"></div>
+
+<aside id="sideMenu">
+
+    <div class="menu-heading">
+        <span>// NAV MENU</span>
+        <button onclick="closeMenu()">×</button>
+    </div>
+
+    <button class="menu-link" onclick="showLanding()">Welcome Page</button>
+
+    <button class="menu-link" onclick="showHome()">Home Page</button>
+
+    <a class="menu-link" href="#topRated" onclick="goToSection('topRated')">
+        Top Rated Games
+    </a>
+
+    <a class="menu-link" href="#allGames" onclick="goToSection('allGames')">
+        Explore Games
+    </a>
+
+    <a class="menu-link" href="#wishlist" onclick="goToSection('wishlist')">
+        Wishlist
+    </a>
+
+<a class="menu-link" href="#searchmore" onclick="goToSection('searchmore')">
+        Search More Games
+    </a>
+
+ <a class="menu-link" href="#Account and profile" onclick="goToSection('accountandprofile')">
+  
+        Account and Profile
+    </a>
+
+ <a class="menu-link" href="#compareratings" onclick="goToSection('compareratings')">
+        Compare Ratings
+    </a>
+
+
+    <a class="menu-link" href="#requests" onclick="goToSection('requests')">
+        Demand More Games
+    </a>
+    
+
+
+
+
+    <button class="menu-link" onclick="toggleTheme()">
+        Switch Theme
+    </button>
+
+</aside>
+
+</body>
+</html>
