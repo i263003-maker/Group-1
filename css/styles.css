@@ -13,9 +13,9 @@
   --navy: #192943;
   --primary: #2d7ed0;
   --primary-hover: #216bb7;
-  --accent: #4da3ff;
-  --text: #f3f6fb;
-  --muted: #9ca8bd;
+  --accent: #ff8c00;
+  --text: #ff8c00;
+  --muted: #ffa64d;
   --border: #25324a;
   --danger: #ef4444;
   --success: #22c55e;
@@ -58,7 +58,7 @@ body {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #ffffff;
+  color: #ff8c00;
   font-weight: 800;
   font-size: 1.4rem;
   letter-spacing: 0.5px;
@@ -72,7 +72,7 @@ body {
 }
 
 .nav-link {
-  color: #e2e8f0;
+  color: #ff8c00;
   text-decoration: none;
   font-weight: 600;
   font-size: 0.98rem;
@@ -80,13 +80,13 @@ body {
 }
 
 .nav-link:hover {
-  color: var(--accent);
+  color: #ffb84d;
 }
 
 .nav-pill {
   display: inline-block;
   background-color: var(--primary);
-  color: #ffffff;
+  color: #ff8c00;
   text-decoration: none;
   font-weight: 700;
   font-size: 0.92rem;
@@ -114,7 +114,7 @@ body {
   display: block;
   width: 22px;
   height: 2px;
-  background: #ffffff;
+  background: #ff8c00;
 }
 
 /* Toast Banner */
@@ -146,7 +146,7 @@ body {
 
 .demo-badge {
   background-color: var(--primary);
-  color: #ffffff;
+  color: #ff8c00;
   font-size: 0.75rem;
   font-weight: 800;
   padding: 3px 8px;
@@ -226,13 +226,13 @@ body {
   font-weight: 600;
   background-color: rgba(239, 68, 68, 0.14);
   border: 1px solid var(--danger);
-  color: #fca5a5;
+  color: #ff8c00;
 }
 
 .form-alert.success {
   background-color: rgba(34, 197, 94, 0.14);
   border-color: var(--success);
-  color: #86efac;
+  color: #ff8c00;
 }
 
 .form-group {
@@ -244,6 +244,7 @@ body {
   font-weight: 600;
   margin-bottom: 6px;
   font-size: 0.95rem;
+  color: #ff8c00;
 }
 
 .input-wrapper {
@@ -270,6 +271,11 @@ textarea {
   transition: border-color 0.15s ease;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: #e67e00;
+}
+
 .input-wrapper.has-toggle input {
   padding-right: 68px;
 }
@@ -291,7 +297,7 @@ textarea:focus {
 }
 
 .field-error {
-  color: #fca5a5;
+  color: #ff8c00;
   font-size: 0.84rem;
   margin-top: 4px;
   min-height: 1.1em;
@@ -310,7 +316,7 @@ textarea:focus {
   align-items: center;
   gap: 10px;
   font-size: 0.92rem;
-  color: #dbe4f3;
+  color: #ff8c00;
   cursor: pointer;
 }
 
@@ -344,7 +350,7 @@ textarea:focus {
 
 .btn-primary {
   background-color: var(--primary);
-  color: #ffffff;
+  color: #ff8c00;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -353,13 +359,13 @@ textarea:focus {
 
 .btn-secondary {
   background-color: var(--surface-alt);
-  color: #ffffff;
+  color: #ff8c00;
   border: 1px solid var(--border);
 }
 
 .btn-logout {
   background-color: #0b101b;
-  color: var(--danger);
+  color: #ff8c00;
   border: 1px solid var(--border);
   margin-top: 16px;
 }
@@ -420,7 +426,7 @@ textarea:focus {
   height: 96px;
   border-radius: 50%;
   background-color: #dce9f8;
-  color: var(--navy);
+  color: #ff8c00;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,11 +448,12 @@ textarea:focus {
 .profile-name-row h2 {
   font-size: 1.7rem;
   font-weight: 800;
+  color: #ff8c00;
 }
 
 .verified-pill {
   background-color: rgba(34, 197, 94, 0.16);
-  color: #86efac;
+  color: #ff8c00;
   border: 1px solid rgba(34, 197, 94, 0.4);
   font-size: 0.78rem;
   font-weight: 700;
@@ -476,7 +483,7 @@ textarea:focus {
 
 .stat-card {
   background-color: #e4effd;
-  color: var(--navy);
+  color: #ff8c00;
   border-radius: 14px;
   padding: 20px;
   text-align: center;
@@ -502,6 +509,7 @@ textarea:focus {
 .recent-reviews h3 {
   font-size: 1.25rem;
   margin-bottom: 12px;
+  color: #ff8c00;
 }
 
 .reviews-list {
@@ -520,6 +528,7 @@ textarea:focus {
 .review-item h4 {
   font-size: 1.08rem;
   margin-bottom: 4px;
+  color: #ff8c00;
 }
 
 .review-item p {
@@ -559,13 +568,13 @@ textarea:focus {
 }
 
 .footer-links a {
-  color: #e2e8f0;
+  color: #ff8c00;
   text-decoration: none;
   font-size: 0.92rem;
 }
 
 .footer-links a:hover {
-  color: var(--accent);
+  color: #ffb84d;
 }
 
 .footer-copy {
