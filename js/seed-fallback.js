@@ -169,5 +169,6 @@ window.DEFAULT_HUB_DATA = {
       reviews: []
     }
   ],
-  submissions: []
+  submissions: [],
+  wishlists: {}
 };

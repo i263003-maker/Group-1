@@ -1,5 +1,5 @@
 /**
- * Game Detail, Inline Info Editor, Wishlist & Permanent Review Page (game.html)
+ * Game Detail, Inline Info Editor, Per-Account Wishlist & Permanent Review Page (game.html)
  */
 (function () {
   const {
@@ -11,6 +11,7 @@
     showToast,
     openModal,
     closeModal,
+    processPngCoverUpload,
     updateNavbarIndicators,
     initSharedChrome
   } = window.GameHubUI;
@@ -40,15 +41,20 @@
 
   function renderWishlistState() {
     if (!currentGame) return;
-    const wishlisted = window.GameHubStorage.isWishlisted(currentGame.id);
+    const acct = window.GameHubStorage.getCurrentAccount();
+    const wishlisted = window.GameHubStorage.isWishlisted(currentGame.id, acct);
     const btn = document.getElementById("wishlistBtn");
     const label = document.getElementById("wishlistBtnLabel");
     const icon = btn.querySelector(".heart-icon");
+    const note = document.getElementById("wishlistNote");
 
     btn.classList.toggle("is-wishlisted", wishlisted);
     btn.setAttribute("aria-pressed", String(wishlisted));
     icon.textContent = wishlisted ? "♥" : "♡";
     label.textContent = wishlisted ? "Wishlisted" : "Add to Wishlist";
+    if (note) {
+      note.textContent = `Stored permanently per account (active: ${acct}). Call GameHubStorage.setCurrentAccount(userId) when login is ready.`;
+    }
     updateNavbarIndicators();
   }
 
@@ -319,6 +325,8 @@
     document.getElementById("editSummary").value = game.summary || "";
     document.getElementById("editPros").value = (game.pros || []).join("\n");
     document.getElementById("editCons").value = (game.cons || []).join("\n");
+    const editCoverFile = document.getElementById("editCoverFile");
+    if (editCoverFile) editCoverFile.value = "";
   }
 
   async function loadPage() {
@@ -344,16 +352,20 @@
   document.addEventListener("DOMContentLoaded", async () => {
     initSharedChrome({ onDataRefresh: loadPage });
 
-    document.getElementById("wishlistBtn").addEventListener("click", () => {
+    document.getElementById("wishlistBtn").addEventListener("click", async () => {
       if (!currentGame) return;
-      const result = window.GameHubStorage.toggleWishlist(currentGame.id);
-      renderWishlistState();
-      showToast(
-        result.wishlisted
-          ? `Added "${currentGame.title}" to your Wishlist (saved locally until accounts launch).`
-          : `Removed "${currentGame.title}" from your Wishlist.`,
-        "info"
-      );
+      try {
+        const result = await window.GameHubStorage.toggleWishlist(currentGame.id);
+        renderWishlistState();
+        showToast(
+          result.wishlisted
+            ? `Saved "${currentGame.title}" permanently to ${result.accountId}'s wishlist.`
+            : `Removed "${currentGame.title}" from ${result.accountId}'s wishlist.`,
+          "info"
+        );
+      } catch (err) {
+        showToast(err.message || "Could not update wishlist.", "error");
+      }
     });
 
     document.getElementById("jumpToReviewBtn").addEventListener("click", () => {
@@ -368,6 +380,22 @@
     };
     document.getElementById("openEditInfoBtn").addEventListener("click", openEdit);
     document.getElementById("inlineEditInfoBtn").addEventListener("click", openEdit);
+
+    const editCoverFile = document.getElementById("editCoverFile");
+    if (editCoverFile) {
+      editCoverFile.addEventListener("change", async (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        try {
+          const processed = await processPngCoverUpload(file);
+          document.getElementById("editCoverImage").value = processed.dataUrl;
+          showToast(`Loaded PNG cover "${processed.fileName}". Click Save Game Changes to apply.`, "info");
+        } catch (err) {
+          editCoverFile.value = "";
+          showToast(err.message || "Invalid PNG file.", "error");
+        }
+      });
+    }
 
     document.getElementById("editGameForm").addEventListener("submit", async (event) => {
       event.preventDefault();

@@ -1,5 +1,6 @@
 /**
- * Shared UI helpers, modals, score formatting, and safe HTML escaping.
+ * Shared UI helpers, modals, PNG cover upload processing, account wishlist modal,
+ * score formatting, and safe HTML escaping.
  */
 (function (global) {
   function escapeHtml(value) {
@@ -73,10 +74,62 @@
     if (el) el.hidden = true;
   }
 
+  /**
+   * Reads a user-selected PNG file, validates its type, resizes proportionally
+   * within maxWidth x maxHeight on an HTML5 canvas, and returns a compact PNG data URL.
+   */
+  function processPngCoverUpload(file, { maxWidth = 480, maxHeight = 640 } = {}) {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file selected."));
+        return;
+      }
+      const isPng =
+        file.type === "image/png" || String(file.name || "").toLowerCase().endsWith(".png");
+      if (!isPng) {
+        reject(new Error("Please choose a .png image file for the cover."));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read PNG file."));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Invalid PNG image."));
+        img.onload = () => {
+          const scale = Math.min(1, maxWidth / img.width, maxHeight / img.height);
+          const targetW = Math.max(1, Math.round(img.width * scale));
+          const targetH = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, targetW, targetH);
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+          const dataUrl = canvas.toDataURL("image/png");
+          resolve({
+            dataUrl,
+            width: targetW,
+            height: targetH,
+            fileName: file.name
+          });
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function updateNavbarIndicators() {
+    const activeAccount = global.GameHubStorage.getCurrentAccount();
     const countEl = document.getElementById("navWishlistCount");
     if (countEl) {
-      countEl.textContent = String(global.GameHubStorage.getWishlist().length);
+      countEl.textContent = String(global.GameHubStorage.getWishlist(activeAccount).length);
+    }
+
+    const acctEl = document.getElementById("navAccountLabel");
+    if (acctEl) {
+      acctEl.textContent = activeAccount;
     }
 
     const dot = document.getElementById("githubSyncDot");
@@ -112,17 +165,67 @@
 
     listEl.innerHTML = subs
       .slice(0, 6)
-      .map(
-        (s) => `
-      <div class="submission-row">
-        <div>
-          <strong>${escapeHtml(s.title)}</strong>
-          <span class="muted">by ${escapeHtml(s.developer || "Unknown Studio")}</span>
-        </div>
-        <span class="muted">${escapeHtml(s.platforms || "Multiplatform")}</span>
-      </div>
-    `
-      )
+      .map((s) => {
+        const thumb = s.coverImage
+          ? `<img class="submission-thumb" src="${escapeHtml(s.coverImage)}" alt="${escapeHtml(
+              s.title
+            )} cover" />`
+          : "";
+        return `
+          <div class="submission-row">
+            <div style="display:flex; align-items:center; gap:0.65rem;">
+              ${thumb}
+              <div>
+                <strong>${escapeHtml(s.title)}</strong>
+                <div class="muted">by ${escapeHtml(s.developer || "Unknown Studio")}</div>
+              </div>
+            </div>
+            <span class="muted">${escapeHtml(s.platforms || "Multiplatform")}</span>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  async function renderAccountWishlistModal() {
+    const acct = global.GameHubStorage.getCurrentAccount();
+    const inputEl = document.getElementById("accountIdInput");
+    const listEl = document.getElementById("accountWishlistItems");
+    const titleEl = document.getElementById("accountWishlistHeading");
+    if (!inputEl || !listEl || !titleEl) return;
+
+    inputEl.value = acct;
+    const { data } = await global.GameHubStorage.loadHubData();
+    const wishlistIds = global.GameHubStorage.getWishlist(acct);
+    titleEl.textContent = `${acct}'s Saved Wishlist (${wishlistIds.length})`;
+
+    if (!wishlistIds.length) {
+      listEl.innerHTML = `<p class="helper-text">No games wishlisted for <code>${escapeHtml(
+        acct
+      )}</code> yet.</p>`;
+      return;
+    }
+
+    const gamesById = new Map((data.games || []).map((g) => [g.id, g]));
+    listEl.innerHTML = wishlistIds
+      .map((id) => {
+        const game = gamesById.get(id);
+        const title = game ? game.title : id;
+        return `
+          <div class="wishlist-row">
+            <a class="wishlist-row-link" href="game.html?id=${encodeURIComponent(id)}">
+              ${escapeHtml(title)}
+            </a>
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              data-remove-wishlist-id="${escapeHtml(id)}"
+            >
+              Remove
+            </button>
+          </div>
+        `;
+      })
       .join("");
   }
 
@@ -149,6 +252,57 @@
       }
     });
 
+    // Submit Game for Review Modal + PNG cover upload
+    let pendingCoverDataUrl = "";
+    let pendingCoverFileName = "";
+
+    const resetSubCoverPreview = () => {
+      pendingCoverDataUrl = "";
+      pendingCoverFileName = "";
+      const fileInput = document.getElementById("subCoverFile");
+      const preview = document.getElementById("subCoverPreview");
+      const meta = document.getElementById("subCoverMeta");
+      const clearBtn = document.getElementById("subCoverClearBtn");
+      if (fileInput) fileInput.value = "";
+      if (preview) preview.innerHTML = `<span>PNG Cover</span>`;
+      if (meta) meta.textContent = "No PNG selected";
+      if (clearBtn) clearBtn.hidden = true;
+    };
+
+    const subCoverFile = document.getElementById("subCoverFile");
+    if (subCoverFile) {
+      subCoverFile.addEventListener("change", async (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+          resetSubCoverPreview();
+          return;
+        }
+        try {
+          const processed = await processPngCoverUpload(file);
+          pendingCoverDataUrl = processed.dataUrl;
+          pendingCoverFileName = processed.fileName;
+          const preview = document.getElementById("subCoverPreview");
+          const meta = document.getElementById("subCoverMeta");
+          const clearBtn = document.getElementById("subCoverClearBtn");
+          if (preview) {
+            preview.innerHTML = `<img src="${escapeHtml(processed.dataUrl)}" alt="Cover preview" />`;
+          }
+          if (meta) {
+            meta.textContent = `${processed.fileName} (${processed.width}x${processed.height} PNG)`;
+          }
+          if (clearBtn) clearBtn.hidden = false;
+        } catch (err) {
+          resetSubCoverPreview();
+          showToast(err.message || "Could not process PNG cover.", "error");
+        }
+      });
+    }
+
+    const subCoverClearBtn = document.getElementById("subCoverClearBtn");
+    if (subCoverClearBtn) {
+      subCoverClearBtn.addEventListener("click", resetSubCoverPreview);
+    }
+
     const openSubmitBtn = document.getElementById("openSubmitGameBtn");
     if (openSubmitBtn) {
       openSubmitBtn.addEventListener("click", async () => {
@@ -169,9 +323,12 @@
             releaseWindow: document.getElementById("subReleaseWindow").value,
             officialUrl: document.getElementById("subOfficialUrl").value,
             submittedBy: document.getElementById("subSubmittedBy").value,
-            notes: document.getElementById("subNotes").value
+            notes: document.getElementById("subNotes").value,
+            coverImage: pendingCoverDataUrl,
+            coverFileName: pendingCoverFileName
           });
           submitGameForm.reset();
+          resetSubCoverPreview();
           await renderSubmissionsList();
           showToast(
             persistResult.syncedGitHub
@@ -194,6 +351,9 @@
         const windowVal = document.getElementById("subReleaseWindow").value.trim() || "TBD";
         const urlVal = document.getElementById("subOfficialUrl").value.trim() || "N/A";
         const notesVal = document.getElementById("subNotes").value.trim() || "N/A";
+        const coverNote = pendingCoverFileName
+          ? `Attached in local queue: ${pendingCoverFileName} (drag-and-drop PNG into this issue if desired)`
+          : "None";
 
         const issueUrl = global.GameHubStorage.buildGitHubIssueUrl({
           title: `[Game Submission] ${titleVal}`,
@@ -205,6 +365,7 @@
             `- **Platforms:** ${platVal}`,
             `- **Release Window:** ${windowVal}`,
             `- **Official Link:** ${urlVal}`,
+            `- **Cover PNG:** ${coverNote}`,
             ``,
             `### Pitch / Notes`,
             notesVal
@@ -220,6 +381,43 @@
       });
     }
 
+    // Account & Per-Account Wishlist Modal
+    const openAccountModalBtn = document.getElementById("openAccountModalBtn");
+    if (openAccountModalBtn) {
+      openAccountModalBtn.addEventListener("click", async () => {
+        await renderAccountWishlistModal();
+        openModal("accountModal");
+      });
+    }
+
+    const accountForm = document.getElementById("accountForm");
+    if (accountForm) {
+      accountForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const acct = global.GameHubStorage.setCurrentAccount(
+          document.getElementById("accountIdInput").value
+        );
+        updateNavbarIndicators();
+        await renderAccountWishlistModal();
+        showToast(`Switched active wishlist account to "${acct}".`, "success");
+        if (typeof onDataRefresh === "function") onDataRefresh();
+      });
+    }
+
+    const accountWishlistItems = document.getElementById("accountWishlistItems");
+    if (accountWishlistItems) {
+      accountWishlistItems.addEventListener("click", async (event) => {
+        const btn = event.target.closest("[data-remove-wishlist-id]");
+        if (!btn) return;
+        const gameId = btn.getAttribute("data-remove-wishlist-id");
+        await global.GameHubStorage.toggleWishlist(gameId);
+        updateNavbarIndicators();
+        await renderAccountWishlistModal();
+        if (typeof onDataRefresh === "function") onDataRefresh();
+      });
+    }
+
+    // GitHub Sync Modal
     const openGitHubSyncBtn = document.getElementById("openGitHubSyncBtn");
     if (openGitHubSyncBtn) {
       openGitHubSyncBtn.addEventListener("click", () => {
@@ -268,7 +466,7 @@
         try {
           await global.GameHubStorage.loadHubData({ forceRemote: true });
           closeModal("githubSyncModal");
-          showToast("Pulled latest catalog & reviews from GitHub!", "success");
+          showToast("Pulled latest catalog, reviews & wishlists from GitHub!", "success");
           if (typeof onDataRefresh === "function") onDataRefresh();
         } catch (err) {
           showToast(err.message || "Unable to pull from GitHub.", "error");
@@ -304,6 +502,7 @@
     showToast,
     openModal,
     closeModal,
+    processPngCoverUpload,
     updateNavbarIndicators,
     initSharedChrome
   };

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Details &amp; Reviews // RatingHub</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand-group">
+        <a class="brand" href="index.html" aria-label="RatingHub Game Reviews">
+          <img src="assets/ratinghub-logo.png" alt="RatingHub" class="brand-logo" />
+        </a>
+        <a class="btn btn-secondary btn-sm brand-home-btn" href="home.html">Home</a>
+      </div>
+
+      <div class="topbar-actions">
+        <a class="btn btn-ghost btn-sm" href="index.html">&larr; All Games</a>
+        <button type="button" class="btn btn-primary btn-sm" id="openSubmitGameBtn">
+          + Submit Game for Review
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="openGitHubSyncBtn" title="Configure GitHub permanent storage">
+          <span class="status-dot" id="githubSyncDot"></span>
+          <span id="githubSyncStatusText">GitHub Sync</span>
+        </button>
+        <button type="button" class="wishlist-pill" id="openAccountModalBtn" title="Manage account & saved wishlist">
+          <span class="heart-glyph" aria-hidden="true">♥</span>
+          <span id="navWishlistCount">0</span>
+          <span class="muted">&middot;</span>
+          <span id="navAccountLabel">guest</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="gameNotFound" class="container empty-state" hidden>
+    <h1>Game not found</h1>
+    <p>We couldn&rsquo;t find that game in the catalog.</p>
+    <a class="btn btn-primary" href="index.html">Back to Game Hub</a>
+  </div>
+
+  <div id="gamePageContent">
+    <!-- Hero Banner -->
+    <section class="game-hero">
+      <div class="hero-backdrop">
+        <img id="heroBannerImg" src="" alt="" />
+        <div class="hero-scrim"></div>
+      </div>
+
+      <div class="container hero-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="index.html">Games</a>
+          <span>/</span>
+          <span id="crumbGameTitle">Loading...</span>
+        </nav>
+
+        <div class="hero-layout">
+          <div class="cover-frame">
+            <img id="gameCoverImg" src="" alt="Game cover art" />
+          </div>
+
+          <div class="hero-info">
+            <div class="chip-row" id="gameGenres"></div>
+            <h1 id="gameTitle">Loading game...</h1>
+            <p class="hero-tagline" id="gameTagline"></p>
+
+            <div class="hero-meta-strip">
+              <div><span class="meta-label">Developer</span><strong id="metaDeveloper">—</strong></div>
+              <div><span class="meta-label">Publisher</span><strong id="metaPublisher">—</strong></div>
+              <div><span class="meta-label">Release</span><strong id="metaReleaseDate">—</strong></div>
+              <div><span class="meta-label">Rating</span><strong id="metaAgeRating">—</strong></div>
+              <div><span class="meta-label">Playtime</span><strong id="metaPlaytime">—</strong></div>
+            </div>
+
+            <div class="chip-row" id="gamePlatforms"></div>
+
+            <div class="hero-actions">
+              <button type="button" class="btn btn-wishlist" id="wishlistBtn" aria-pressed="false">
+                <span class="heart-icon" aria-hidden="true">♡</span>
+                <span id="wishlistBtnLabel">Add to Wishlist</span>
+              </button>
+              <button type="button" class="btn btn-primary" id="jumpToReviewBtn">
+                Write a Review
+              </button>
+              <button type="button" class="btn btn-secondary" id="openEditInfoBtn">
+                Edit Game Info
+              </button>
+            </div>
+            <p class="wishlist-note" id="wishlistNote">
+              Stored permanently per account (active: guest).
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="container game-main">
+      <!-- Scores Overview -->
+      <section class="scores-strip">
+        <article class="score-panel">
+          <div class="score-badge-lg" id="editorScoreBadge">—</div>
+          <div class="score-panel-copy">
+            <p class="eyebrow">EDITOR&rsquo;S VERDICT</p>
+            <h2 id="editorVerdictLabel">—</h2>
+            <p class="muted" id="editorSummaryQuote">Official hub score based on design, polish, and replayability.</p>
+          </div>
+        </article>
+
+        <article class="score-panel">
+          <div class="score-badge-lg community" id="communityScoreBadge">—</div>
+          <div class="score-panel-copy">
+            <p class="eyebrow">COMMUNITY SCORE</p>
+            <h2 id="communityVerdictLabel">No reviews yet</h2>
+            <p class="muted" id="reviewCountLabel">Be the first player to leave a permanent review.</p>
+          </div>
+          <div class="score-bars" id="scoreDistribution" aria-label="Score distribution"></div>
+        </article>
+      </section>
+
+      <div class="detail-grid">
+        <!-- Left Main Column -->
+        <div class="detail-primary">
+          <section class="card">
+            <div class="card-header">
+              <h2>About the <span>Game</span></h2>
+              <button type="button" class="btn btn-ghost btn-sm" id="inlineEditInfoBtn">Edit Details</button>
+            </div>
+            <p class="game-summary" id="gameSummary"></p>
+
+            <div class="verdict-columns">
+              <div class="verdict-box pros">
+                <h3>What We Loved</h3>
+                <ul id="gameProsList"></ul>
+              </div>
+              <div class="verdict-box cons">
+                <h3>Where It Falls Short</h3>
+                <ul id="gameConsList"></ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-header">
+              <h2>Screenshots &amp; <span>Media</span></h2>
+            </div>
+            <div class="screenshots-grid" id="screenshotsGallery"></div>
+          </section>
+
+          <!-- Permanent Reviews Section -->
+          <section class="card" id="reviewComposerSection">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">PERMANENT COMMUNITY REVIEWS</p>
+                <h2>Leave Your <span>Review</span></h2>
+              </div>
+              <span class="persistence-pill" id="reviewPersistHint">Saved locally + GitHub ready</span>
+            </div>
+
+            <form id="reviewForm" class="review-form">
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Your Name / Handle *</span>
+                  <input type="text" id="revAuthor" class="input" required maxlength="60" placeholder="e.g., AlexMercer" />
+                </label>
+                <label class="field">
+                  <span>Platform Played *</span>
+                  <select id="revPlatform" class="input" required></select>
+                </label>
+              </div>
+
+              <div class="score-picker">
+                <div class="score-picker-head">
+                  <span>Your Score (1.0 &ndash; 10.0)</span>
+                  <div class="score-readout">
+                    <strong id="revScoreValue">8.5</strong>
+                    <span class="verdict-tag" id="revScoreVerdict">Great</span>
+                  </div>
+                </div>
+                <input type="range" id="revScore" min="1" max="10" step="0.5" value="8.5" />
+                <div class="range-ticks">
+                  <span>1 Unbearable</span>
+                  <span>5 Mediocre</span>
+                  <span>8 Great</span>
+                  <span>10 Masterpiece</span>
+                </div>
+              </div>
+
+              <label class="field">
+                <span>Review Headline *</span>
+                <input type="text" id="revHeadline" class="input" required maxlength="120" placeholder="Summarize your take in one punchy line" />
+              </label>
+
+              <label class="field">
+                <span>Full Review *</span>
+                <textarea id="revBody" class="input" required rows="4" placeholder="Share what stood out, how it runs, and who should play it..."></textarea>
+              </label>
+
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Pros (comma-separated)</span>
+                  <input type="text" id="revPros" class="input" placeholder="Tight combat, Great soundtrack" />
+                </label>
+                <label class="field">
+                  <span>Cons (comma-separated)</span>
+                  <input type="text" id="revCons" class="input" placeholder="Minor frame drops, Slow tutorial" />
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submitReviewBtn">
+                  Publish Permanent Review
+                </button>
+              </div>
+            </form>
+
+            <div class="reviews-toolbar">
+              <h3>Player Reviews (<span id="reviewsHeaderCount">0</span>)</h3>
+              <div class="toolbar-controls">
+                <select id="reviewsPlatformFilter" class="input input-sm" aria-label="Filter reviews by platform">
+                  <option value="ALL">All Platforms</option>
+                </select>
+                <select id="reviewsSort" class="input input-sm" aria-label="Sort reviews">
+                  <option value="newest">Newest First</option>
+                  <option value="highest">Highest Score</option>
+                  <option value="lowest">Lowest Score</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="reviewsList" class="reviews-list" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside class="detail-sidebar">
+          <section class="card">
+            <div class="card-header">
+              <h2>Game Info <span>Sheet</span></h2>
+            </div>
+            <dl class="specs-list" id="gameSpecsTable"></dl>
+          </section>
+
+          <section class="card">
+            <div class="card-header">
+              <h2>More <span>Games</span></h2>
+            </div>
+            <div class="related-list" id="relatedGamesList"></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>RatingHub &middot; Game Dossier &amp; Permanent Reviews</p>
+      <p id="dataSourceFooter">Data source: checking...</p>
+    </div>
+  </footer>
+
+  <!-- Edit Game Info Modal -->
+  <div class="modal-backdrop" id="editGameModal" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="editGameModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">UPDATE GAME DOSSIER</p>
+          <h2 id="editGameModalTitle">Edit Game <span>Information</span></h2>
+        </div>
+        <button type="button" class="icon-btn" data-close-modal="editGameModal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="editGameForm" class="modal-body form-stack">
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Title *</span>
+            <input type="text" id="editTitle" class="input" required />
+          </label>
+          <label class="field">
+            <span>Release Date</span>
+            <input type="date" id="editReleaseDate" class="input" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Tagline</span>
+          <input type="text" id="editTagline" class="input" />
+        </label>
+
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Developer</span>
+            <input type="text" id="editDeveloper" class="input" />
+          </label>
+          <label class="field">
+            <span>Publisher</span>
+            <input type="text" id="editPublisher" class="input" />
+          </label>
+        </div>
+
+        <div class="form-grid-3">
+          <label class="field">
+            <span>Editor Score (0&ndash;10)</span>
+            <input type="number" id="editEditorScore" class="input" min="0" max="10" step="0.1" />
+          </label>
+          <label class="field">
+            <span>Age Rating</span>
+            <input type="text" id="editAgeRating" class="input" placeholder="e.g., M (17+)" />
+          </label>
+          <label class="field">
+            <span>Playtime</span>
+            <input type="text" id="editPlaytime" class="input" placeholder="e.g., 30–50 Hours" />
+          </label>
+        </div>
+
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Platforms (comma-separated)</span>
+            <input type="text" id="editPlatforms" class="input" placeholder="PC, PS5, Xbox Series X|S" />
+          </label>
+          <label class="field">
+            <span>Genres (comma-separated)</span>
+            <input type="text" id="editGenres" class="input" placeholder="Action RPG, Open World" />
+          </label>
+        </div>
+
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Cover Image URL / Path (or upload PNG below)</span>
+            <input type="text" id="editCoverImage" class="input" />
+          </label>
+          <label class="field">
+            <span>Banner Image URL / Path</span>
+            <input type="text" id="editBannerImage" class="input" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Upload New Cover (.png)</span>
+          <input type="file" id="editCoverFile" class="input" accept="image/png" />
+        </label>
+
+        <label class="field">
+          <span>Screenshot URLs / Paths (one per line)</span>
+          <textarea id="editScreenshots" class="input" rows="2"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Game Summary / Overview</span>
+          <textarea id="editSummary" class="input" rows="4"></textarea>
+        </label>
+
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Pros (one per line)</span>
+            <textarea id="editPros" class="input" rows="3"></textarea>
+          </label>
+          <label class="field">
+            <span>Cons (one per line)</span>
+            <textarea id="editCons" class="input" rows="3"></textarea>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close-modal="editGameModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Game Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="modal-backdrop" id="lightboxModal" hidden>
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+      <button type="button" class="icon-btn lightbox-close" data-close-modal="lightboxModal" aria-label="Close preview">&times;</button>
+      <img id="lightboxImg" src="" alt="Expanded game screenshot" />
+    </div>
+  </div>
+
+  <!-- Account & Per-Account Permanent Wishlist Modal -->
+  <div class="modal-backdrop" id="accountModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">PER-ACCOUNT PERMANENT WISHLIST</p>
+          <h2 id="accountModalTitle">Account &amp; <span>Wishlist</span></h2>
+        </div>
+        <button type="button" class="icon-btn" data-close-modal="accountModal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body form-stack">
+        <p class="helper-text">
+          Wishlists are stored permanently per account in <code>ratinghub.wishlistsByAccount.v1</code> and <code>data/games.json</code> (<code>wishlists[accountId]</code>). Once your login system is ready, call <code>GameHubStorage.setCurrentAccount(userId)</code>.
+        </p>
+        <form id="accountForm" class="form-grid-2" style="align-items:end;">
+          <label class="field">
+            <span>Active Account ID / Username</span>
+            <input type="text" id="accountIdInput" class="input" required placeholder="e.g., abdullah" />
+          </label>
+          <button type="submit" class="btn btn-primary">Switch Active Account</button>
+        </form>
+
+        <div class="submissions-preview">
+          <h3 id="accountWishlistHeading">Saved Wishlist (0)</h3>
+          <div id="accountWishlistItems" class="wishlist-account-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Game for Review Modal -->
+  <div class="modal-backdrop" id="submitGameModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="submitGameModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">FUTURE QUEUE &amp; COMMUNITY PITCH</p>
+          <h2 id="submitGameModalTitle">Submit a Game <span>for Review</span></h2>
+        </div>
+        <button type="button" class="icon-btn" data-close-modal="submitGameModal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="submitGameForm" class="modal-body form-stack">
+        <p class="helper-text">
+          Submit a title with an optional <strong>.png cover image</strong>. Submissions save to <code>data/games.json</code> (and commit to GitHub if configured) or open directly as a GitHub Issue.
+        </p>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Game Title *</span>
+            <input type="text" id="subTitle" class="input" required placeholder="e.g., Hollow Knight: Silksong" />
+          </label>
+          <label class="field">
+            <span>Developer / Studio *</span>
+            <input type="text" id="subDeveloper" class="input" required placeholder="e.g., Team Cherry" />
+          </label>
+        </div>
+
+        <div class="field">
+          <span>Upload Cover Image (.png)</span>
+          <div class="upload-box">
+            <div class="upload-preview" id="subCoverPreview">
+              <span>PNG Cover</span>
+            </div>
+            <div class="upload-controls">
+              <input type="file" id="subCoverFile" class="input" accept="image/png" />
+              <div class="upload-meta-row">
+                <span id="subCoverMeta">No PNG selected</span>
+                <button type="button" class="btn btn-ghost btn-sm" id="subCoverClearBtn" hidden>Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Platforms</span>
+            <input type="text" id="subPlatforms" class="input" placeholder="PC, Switch 2, PS5" />
+          </label>
+          <label class="field">
+            <span>Release Date / Window</span>
+            <input type="text" id="subReleaseWindow" class="input" placeholder="e.g., 2026 / Released" />
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Official Store / Press Kit URL</span>
+            <input type="url" id="subOfficialUrl" class="input" placeholder="https://..." />
+          </label>
+          <label class="field">
+            <span>Your Name / Handle</span>
+            <input type="text" id="subSubmittedBy" class="input" placeholder="Optional" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Why should we review this game?</span>
+          <textarea id="subNotes" class="input" rows="3" placeholder="Brief pitch, genre, or key highlights..."></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="submitViaIssueBtn">Open as GitHub Issue</button>
+          <button type="submit" class="btn btn-primary">Queue Submission</button>
+        </div>
+
+        <div class="submissions-preview">
+          <h3>Queued Submissions (<span id="submissionsCount">0</span>)</h3>
+          <div id="pendingSubmissionsList" class="submissions-list"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GitHub Sync Settings Modal -->
+  <div class="modal-backdrop" id="githubSyncModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="githubSyncModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">PERMANENT GITHUB PERSISTENCE</p>
+          <h2 id="githubSyncModalTitle">GitHub <span>Repository Sync</span></h2>
+        </div>
+        <button type="button" class="icon-btn" data-close-modal="githubSyncModal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="githubSyncForm" class="modal-body form-stack">
+        <p class="helper-text">
+          Connect your GitHub repository to commit game edits, reviews, submissions, and per-account wishlists directly into <code>data/games.json</code>. Your token stays strictly in this browser&rsquo;s <code>localStorage</code>.
+        </p>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>GitHub Owner / Org</span>
+            <input type="text" id="ghOwner" class="input" placeholder="i263003-maker" />
+          </label>
+          <label class="field">
+            <span>Repository Name</span>
+            <input type="text" id="ghRepo" class="input" placeholder="Group-1" />
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label class="field">
+            <span>Branch</span>
+            <input type="text" id="ghBranch" class="input" value="main" placeholder="main" />
+          </label>
+          <label class="field">
+            <span>JSON Data Path</span>
+            <input type="text" id="ghPath" class="input" value="data/games.json" placeholder="data/games.json" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Fine-Grained Personal Access Token (optional for read-only, required to commit)</span>
+          <input type="password" id="ghToken" class="input" placeholder="github_pat_..." autocomplete="off" />
+        </label>
+        <div class="modal-actions wrap">
+          <button type="button" class="btn btn-ghost btn-sm" id="exportJsonBtn">Download games.json</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="resetLocalCacheBtn">Reset Local Cache</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="pullFromGitHubBtn">Pull from GitHub</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script src="js/seed-fallback.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game-page.js"></script>
+</body>
+</html>

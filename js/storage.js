@@ -1,21 +1,25 @@
 /**
  * GameHubStorage
- * Persistent data & GitHub repository sync layer for the Game Review Hub.
+ * Persistent data, GitHub repository sync, and per-account Wishlist store.
  *
  * Persistence model:
- * 1. Reads initial catalog & reviews from GitHub Contents API (if configured),
- *    else from ./data/games.json, else from window.DEFAULT_HUB_DATA.
- * 2. Caches local edits/reviews in localStorage immediately so updates are instant.
- * 3. When GitHub repo + Fine-Grained PAT are configured in the user's browser,
- *    commits changes directly to data/games.json in the repository for permanent,
- *    cross-device persistence on GitHub Pages.
- * 4. Also exposes a clean wishlist interface ready to connect to user accounts later.
+ * 1. Reads initial catalog, submissions, and per-account wishlists from GitHub
+ *    Contents API (if configured), else ./data/games.json, else DEFAULT_HUB_DATA.
+ * 2. Saves edits, reviews, submissions, and per-account wishlists immediately in
+ *    localStorage so updates survive reloads right away.
+ * 3. When GitHub Repo + Fine-Grained PAT are configured, commits changes directly
+ *    to data/games.json for permanent cross-device persistence.
+ * 4. Per-account wishlists live in BOTH localStorage ("ratinghub.wishlistsByAccount.v1")
+ *    and data/games.json ("wishlists": { "<accountId>": ["game-id", ...] }) so your
+ *    account system can call GameHubStorage.setCurrentAccount(userId) and
+ *    GameHubStorage.getWishlist(userId) directly once login is connected.
  */
 (function (global) {
   const STORAGE_KEYS = {
-    HUB_DATA: "gamehub.data.v1",
-    GITHUB_CONFIG: "gamehub.github.config.v1",
-    WISHLIST: "gamehub.wishlist.v1"
+    HUB_DATA: "ratinghub.data.v1",
+    GITHUB_CONFIG: "ratinghub.github.config.v1",
+    WISHLISTS_BY_ACCOUNT: "ratinghub.wishlistsByAccount.v1",
+    CURRENT_ACCOUNT: "ratinghub.currentAccount.v1"
   };
 
   const DEFAULT_DATA_PATH = "data/games.json";
@@ -41,6 +45,32 @@
 
   function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
+  }
+
+  function normalizeAccountId(accountId) {
+    const cleaned = String(accountId || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._@-]+/g, "_");
+    return cleaned || "guest";
+  }
+
+  function getCurrentAccount() {
+    if (global.RATINGHUB_CURRENT_ACCOUNT) {
+      return normalizeAccountId(global.RATINGHUB_CURRENT_ACCOUNT);
+    }
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_ACCOUNT);
+      return normalizeAccountId(stored || "guest");
+    } catch {
+      return "guest";
+    }
+  }
+
+  function setCurrentAccount(accountId) {
+    const normalized = normalizeAccountId(accountId);
+    localStorage.setItem(STORAGE_KEYS.CURRENT_ACCOUNT, normalized);
+    return normalized;
   }
 
   function getGitHubConfig() {
@@ -91,6 +121,29 @@
       headers.Authorization = `Bearer ${token}`;
     }
     return headers;
+  }
+
+  function normalizeWishlistsMap(rawMap) {
+    const out = {};
+    if (!rawMap || typeof rawMap !== "object" || Array.isArray(rawMap)) {
+      return out;
+    }
+    Object.entries(rawMap).forEach(([acct, ids]) => {
+      if (Array.isArray(ids)) {
+        const key = normalizeAccountId(acct);
+        out[key] = Array.from(new Set(ids.map(String).filter(Boolean)));
+      }
+    });
+    return out;
+  }
+
+  function normalizeHubData(raw) {
+    const base = raw && typeof raw === "object" ? raw : {};
+    return {
+      games: Array.isArray(base.games) ? base.games : [],
+      submissions: Array.isArray(base.submissions) ? base.submissions : [],
+      wishlists: normalizeWishlistsMap(base.wishlists)
+    };
   }
 
   async function fetchFromGitHubRepo(cfg) {
@@ -174,19 +227,38 @@
     };
   }
 
-  function normalizeHubData(raw) {
-    const base = raw && typeof raw === "object" ? raw : {};
-    return {
-      games: Array.isArray(base.games) ? base.games : [],
-      submissions: Array.isArray(base.submissions) ? base.submissions : []
-    };
+  function readLocalWishlistsMap() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.WISHLISTS_BY_ACCOUNT);
+      if (!raw) return {};
+      return normalizeWishlistsMap(JSON.parse(raw));
+    } catch {
+      return {};
+    }
+  }
+
+  function writeLocalWishlistsMap(map) {
+    const normalized = normalizeWishlistsMap(map);
+    localStorage.setItem(STORAGE_KEYS.WISHLISTS_BY_ACCOUNT, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  function mergeWishlists(primaryMap, secondaryMap) {
+    const merged = normalizeWishlistsMap(primaryMap);
+    const extra = normalizeWishlistsMap(secondaryMap);
+    Object.entries(extra).forEach(([acct, ids]) => {
+      merged[acct] = Array.from(new Set([...(merged[acct] || []), ...ids]));
+    });
+    return merged;
   }
 
   function readLocalHubData() {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.HUB_DATA);
       if (!raw) return null;
-      return normalizeHubData(JSON.parse(raw));
+      const parsed = normalizeHubData(JSON.parse(raw));
+      parsed.wishlists = mergeWishlists(parsed.wishlists, readLocalWishlistsMap());
+      return parsed;
     } catch {
       return null;
     }
@@ -194,6 +266,7 @@
 
   function writeLocalHubData(data) {
     const normalized = normalizeHubData(data);
+    writeLocalWishlistsMap(normalized.wishlists);
     localStorage.setItem(STORAGE_KEYS.HUB_DATA, JSON.stringify(normalized));
     return normalized;
   }
@@ -207,7 +280,9 @@
     } catch {
       // Expected when opened directly via file://
     }
-    return normalizeHubData(clone(global.DEFAULT_HUB_DATA || { games: [], submissions: [] }));
+    return normalizeHubData(
+      clone(global.DEFAULT_HUB_DATA || { games: [], submissions: [], wishlists: {} })
+    );
   }
 
   async function loadHubData({ forceRemote = false } = {}) {
@@ -215,6 +290,7 @@
 
     if (forceRemote && isGitHubReadConfigured(cfg)) {
       const remote = await fetchFromGitHubRepo(cfg);
+      remote.data.wishlists = mergeWishlists(remote.data.wishlists, readLocalWishlistsMap());
       writeLocalHubData(remote.data);
       return { data: remote.data, source: "github" };
     }
@@ -227,6 +303,7 @@
     if (isGitHubReadConfigured(cfg)) {
       try {
         const remote = await fetchFromGitHubRepo(cfg);
+        remote.data.wishlists = mergeWishlists(remote.data.wishlists, readLocalWishlistsMap());
         writeLocalHubData(remote.data);
         return { data: remote.data, source: "github" };
       } catch {
@@ -235,6 +312,7 @@
     }
 
     const seed = await loadSeedData();
+    seed.wishlists = mergeWishlists(seed.wishlists, readLocalWishlistsMap());
     writeLocalHubData(seed);
     return { data: seed, source: "seed" };
   }
@@ -335,6 +413,8 @@
       platforms: (submissionInput.platforms || "").trim(),
       releaseWindow: (submissionInput.releaseWindow || "").trim(),
       officialUrl: (submissionInput.officialUrl || "").trim(),
+      coverImage: (submissionInput.coverImage || "").trim(),
+      coverFileName: (submissionInput.coverFileName || "").trim(),
       notes: (submissionInput.notes || "").trim(),
       submittedBy: (submissionInput.submittedBy || "Community Member").trim(),
       status: "pending_review",
@@ -384,34 +464,46 @@
     return loadHubData({ forceRemote: isGitHubReadConfigured() });
   }
 
+  /**
+   * Per-Account Permanent Wishlist Store
+   * Stores wishlists keyed by accountId in BOTH:
+   * - localStorage ("ratinghub.wishlistsByAccount.v1")
+   * - data/games.json ("wishlists": { "<accountId>": ["game-id"] }) & GitHub repo
+   * Optional external backend adapter can also be plugged in via registerWishlistAdapter.
+   */
   let accountWishlistAdapter = null;
 
   function registerWishlistAdapter(adapter) {
     accountWishlistAdapter = adapter;
   }
 
-  function getWishlist() {
+  function getAllWishlistsByAccount() {
+    const localHub = readLocalHubData();
+    const hubMap = localHub ? localHub.wishlists : {};
+    return mergeWishlists(hubMap, readLocalWishlistsMap());
+  }
+
+  function getWishlist(accountId = getCurrentAccount()) {
+    const acct = normalizeAccountId(accountId);
     if (accountWishlistAdapter && typeof accountWishlistAdapter.getAll === "function") {
-      return accountWishlistAdapter.getAll();
+      return accountWishlistAdapter.getAll(acct);
     }
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.WISHLIST);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+    const map = getAllWishlistsByAccount();
+    return Array.isArray(map[acct]) ? map[acct] : [];
   }
 
-  function isWishlisted(gameId) {
-    return getWishlist().includes(gameId);
+  function isWishlisted(gameId, accountId = getCurrentAccount()) {
+    return getWishlist(accountId).includes(gameId);
   }
 
-  function toggleWishlist(gameId) {
+  async function toggleWishlist(gameId, accountId = getCurrentAccount()) {
+    const acct = normalizeAccountId(accountId);
     if (accountWishlistAdapter && typeof accountWishlistAdapter.toggle === "function") {
-      return accountWishlistAdapter.toggle(gameId);
+      return accountWishlistAdapter.toggle(gameId, acct);
     }
-    const list = new Set(getWishlist());
+
+    const map = getAllWishlistsByAccount();
+    const list = new Set(map[acct] || []);
     let wishlisted = false;
     if (list.has(gameId)) {
       list.delete(gameId);
@@ -420,12 +512,30 @@
       list.add(gameId);
       wishlisted = true;
     }
-    const updated = Array.from(list);
-    localStorage.setItem(STORAGE_KEYS.WISHLIST, JSON.stringify(updated));
-    return { wishlisted, count: updated.length, mode: "local-preview" };
+
+    const updatedList = Array.from(list);
+    map[acct] = updatedList;
+    writeLocalWishlistsMap(map);
+
+    const { data } = await loadHubData();
+    data.wishlists = normalizeWishlistsMap({ ...(data.wishlists || {}), [acct]: updatedList });
+    const persistResult = await persistHubData(
+      data,
+      `Update wishlist for account ${acct} (${gameId})`
+    );
+
+    return {
+      accountId: acct,
+      wishlisted,
+      count: updatedList.length,
+      items: updatedList,
+      persistResult
+    };
   }
 
   global.GameHubStorage = {
+    getCurrentAccount,
+    setCurrentAccount,
     getGitHubConfig,
     saveGitHubConfig,
     isGitHubReadConfigured,
@@ -439,6 +549,7 @@
     buildGitHubIssueUrl,
     exportGamesJson,
     resetLocalCacheToSeed,
+    getAllWishlistsByAccount,
     getWishlist,
     isWishlisted,
     toggleWishlist,

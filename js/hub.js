@@ -104,7 +104,7 @@
               )}</div>
               <div class="game-card-footer">
                 <span>${reviewCount} ${reviewCount === 1 ? "review" : "reviews"}</span>
-                <span>Open Game Page &rarr;</span>
+                <span>Open Game &rarr;</span>
               </div>
             </div>
           </a>
